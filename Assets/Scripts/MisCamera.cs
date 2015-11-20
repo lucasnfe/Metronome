@@ -12,7 +12,7 @@ public class MisCamera : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void LateUpdate () {
 
 		if (!_player)
 			return;
@@ -27,45 +27,23 @@ public class MisCamera : MonoBehaviour {
 
 		// Velocity to move the camera, it will be applied to hero vel
 		Vector2 cameraVel = new Vector2 ();
-	
-		if (heroVel.x != 0f) {
 
-			float dirX = _player.transform.localScale.x;
+		float dirX = _player.transform.localScale.x;
 
-			// Check horizontal contact
-			if (dirX == 1f) {
+		// Check horizontal contact
+		if (dirX == 1f) {
 
-				float boundX = heroBox.center.x - heroBox.extents.x;
-				cameraVel.x = Mathf.Lerp (1.5f, 1f, camWindow.min.x - boundX);
-			} else {
+			float boundX = heroBox.center.x - heroBox.extents.x;
+			cameraVel.x = Mathf.Lerp (1.5f, 1f, camWindow.min.x - boundX);
+		} else {
 
-				float boundX = heroBox.center.x + heroBox.extents.x;
-				cameraVel.x = Mathf.Lerp (1.5f, 1f, boundX - camWindow.max.x);
-			}
+			float boundX = heroBox.center.x + heroBox.extents.x;
+			cameraVel.x = Mathf.Lerp (1.5f, 1f, boundX - camWindow.max.x);
 		}
 
-		if (heroVel.y != 0f) {
+		transform.position += Vector3.right * (heroVel.x * cameraVel.x);
 
-			float dirY = Mathf.Sign(heroVel.y);
-
-			// Check virtual contact
-			if (dirY == 1f) {
-
-				float boundY = heroBox.center.y + heroBox.extents.y;
-				if (camWindow.max.y < boundY) {
-		
-					cameraVel.y = 1.2f;
-				}
-			} else {
-
-				float boundY = heroBox.center.y - heroBox.extents.y;
-				if (camWindow.min.y > boundY) {
-						
-					cameraVel.y = 1.2f;
-				}
-			}
-		}
-
-		transform.position += new Vector3(heroVel.x * cameraVel.x, heroVel.y * cameraVel.y, 0f);
+		float posY = Mathf.Lerp (transform.position.y, _player.transform.position.y, 4f * Time.deltaTime);
+		transform.position = new Vector3 (transform.position.x, posY, transform.position.z);
 	}
 }

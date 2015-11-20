@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 public class MisHero : MisCharacter {
-
+	
 	public override void Start() {
 
 		base.Start ();
@@ -22,27 +22,19 @@ public class MisHero : MisCharacter {
 	}
 
 	private void KeyboardControl() {
-
+	
 		_moveX = 0f;
 
+		if (Input.GetKey (KeyCode.RightArrow) || Input.GetKey (KeyCode.LeftArrow)) {
+
+			_moveX = Input.GetAxis("Horizontal");
+			transform.localScale = new Vector3 (Mathf.Sign(_moveX), 1f, 1f);
+		}
+
+		if (_isOnGround && Input.GetKeyDown (KeyCode.UpArrow))
+			_velocity.y = _jumpSpeed;
+
 		_isAttacking = Input.GetKey (KeyCode.Space);
-
-		if(Input.GetKey (KeyCode.RightArrow)) {
-
-			transform.localScale = new Vector3(1f, 1f, 1f);
-			_moveX = 1f;
-		}
-
-		if(Input.GetKey (KeyCode.LeftArrow)) {
-
-			transform.localScale = new Vector3(-1f, 1f, 1f);
-			_moveX = -1f;
-		}
-
-		if (_isOnGround && Input.GetKeyDown( KeyCode.UpArrow)) {
-
-			_velocity.y += _jumpSpeed;
-		}	
 	}
 
 	protected override void TriggerEvent(Collider2D collider) {

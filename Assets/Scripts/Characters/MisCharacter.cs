@@ -7,15 +7,13 @@ public class MisCharacter : MonoBehaviour {
 	protected Vector2  _velocity;
 
 	protected Vector2 _deltaPos;
-	public Vector2 GetDeltaPos() {
-		return _deltaPos;
-	}
+	public Vector2 GetDeltaPos() { return _deltaPos; }
 
 	protected bool  _isAttacking;
 	protected bool  _isOnGround;
 	protected bool  _isDead;
 	protected float _moveX;
-	
+
 	public  float _moveSpeed;
 	public  float _jumpSpeed;
 	
@@ -47,15 +45,9 @@ public class MisCharacter : MonoBehaviour {
 	}
 	
 	private void CalculateVelocity() {
-		
-		_velocity.x += _moveSpeed * _moveX;
+
+		_velocity.x  = Mathf.Lerp(_velocity.x, _moveSpeed * _moveX, 15f * Time.deltaTime);
 		_velocity.y += MisConstants.GRAVITY;
-		
-		if (_isOnGround)
-			
-			ApplyFriction (Vector2.up, MisConstants.FRICTION_COEF_GROUND);
-		else
-			ApplyFriction (Vector2.up, MisConstants.FRICTION_COEF_AIR);
 
 		_velocity.x = Mathf.Clamp (_velocity.x, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
 		_velocity.y = Mathf.Clamp (_velocity.y, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
@@ -82,40 +74,46 @@ public class MisCharacter : MonoBehaviour {
 		
 		float deltaX = _velocity.x * Time.deltaTime;
 		
-		float startPos = (!_isOnGround ? -0.5f : 0f);
-		for (float i = startPos; i < (float)nRays + startPos; i++) {
-			
-			float dirX = transform.localScale.x;
-			
-			float x = entityPosition.x + (center.x + size.x / 2f) * dirX;
-			float y = (entityPosition.y + center.y - size.y / 2f) + size.y / 2 * i;
-			
-			Vector2 rayX = new Vector2 (x, y);
-			
-			RaycastHit2D hit = Physics2D.Raycast (rayX, new Vector2 (dirX, 0), Mathf.Abs (deltaX));
+		float dirX = transform.localScale.x;
 
-			if (hit.collider) {
-
-				Debug.DrawRay (rayX, new Vector2 (dirX, 0));
-
-				if (!hit.collider.isTrigger) {
-				
-					float distance = Mathf.Abs (x - hit.point.x);
-				
-					if (distance >= MisConstants.PLAYER_SKIN)
-
-						deltaX = (distance - MisConstants.PLAYER_SKIN) * dirX;
-					else
-						deltaX = 0f;
-
-					return deltaX;
-				}
-
-				TriggerEvent (hit.collider);
-			}
-		}
+		for (float i = 0f; i < nRays; i++)
+			if(xAxisRaycasts (entityPosition, center, size, i, ref deltaX, dirX))
+				break;
 
 		return deltaX;
+	}
+
+	private bool xAxisRaycasts(Vector2 entityPosition, Vector2 center, Vector2 size, float i, ref float deltaX, float dirX) {
+	
+		float x = entityPosition.x + (center.x + size.x / 2f) * dirX;
+		float y = (entityPosition.y + center.y - size.y / 2f) + size.y / 2 * i;
+		
+		Vector2 rayX = new Vector2 (x, y);
+		
+		RaycastHit2D hit = Physics2D.Raycast (rayX, new Vector2 (dirX, 0), Mathf.Abs (deltaX));
+		Debug.DrawRay (rayX, new Vector2 (dirX, 0));
+		
+		if (hit.collider) {
+			
+			if (!hit.collider.isTrigger) {
+				
+				_velocity.x = 0f;
+				
+				float distance = Mathf.Abs (x - hit.point.x);
+				
+				if (distance >= MisConstants.PLAYER_SKIN)
+					
+					deltaX = (distance - MisConstants.PLAYER_SKIN) * dirX;
+				else
+					deltaX = 0f;
+				
+				return true;
+			}
+			
+			TriggerEvent (hit.collider);
+		}
+		
+		return false;
 	}
 	
 	private float DetectVerticalCollition(Vector2 entityPosition, Vector2 center, Vector2 size, int nRays) {
@@ -125,7 +123,7 @@ public class MisCharacter : MonoBehaviour {
 		float deltaY = _velocity.y * Time.deltaTime;
 
 		float dirX = -transform.localScale.x;
-		float dirY = Mathf.Sign(deltaY);
+		float dirY =  Mathf.Sign(_velocity.y);
 
 		if (dirX == 1f) {
 			for (float i = nRays - 1f; i >= 0f; i--)
@@ -149,11 +147,10 @@ public class MisCharacter : MonoBehaviour {
 		Vector2 rayY = new Vector2(x, y);
 		
 		RaycastHit2D hit = Physics2D.Raycast(rayY, new Vector2(0, dirY), Mathf.Abs(deltaY));
+		Debug.DrawRay(new Vector2(x, y),  new Vector2(0, dirY));
 
 		if (hit.collider) {
-
-			Debug.DrawRay(new Vector2(x, y),  new Vector2(0, dirY));
-		
+				
 			if (!hit.collider.isTrigger) {
 			
 				_isOnGround = true;
@@ -175,16 +172,6 @@ public class MisCharacter : MonoBehaviour {
 
 		return false;
 	}
-	
-	private void ApplyFriction(Vector2 normal, float frictionCoef) {
-		
-		Vector2 tangent = new Vector2(normal.y, -normal.x); 
-		_velocity -= tangent * Vector2.Dot(_velocity, tangent) * frictionCoef;
-
-		// Avoid really small floating points
-		if (Mathf.Abs(_velocity.x) < 0.05f)
-			_velocity.x = 0f;
-	}
 
 	protected virtual void TriggerEvent(Collider2D collider) {
 	
@@ -204,4 +191,5 @@ public class MisCharacter : MonoBehaviour {
 		
 		return (_moveX != 0f);
 	}
+
 }
