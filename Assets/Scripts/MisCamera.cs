@@ -10,6 +10,11 @@ public class MisCamera : MonoBehaviour {
 	
 
 	}
+
+	public void Move(Vector2 dest) {
+
+		transform.position = new Vector3 (dest.x, dest.y, transform.position.z);
+	}
 	
 	// Update is called once per frame
 	void LateUpdate () {

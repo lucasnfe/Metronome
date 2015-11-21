@@ -24,9 +24,8 @@ public class MisSingleton<T> : MonoBehaviour where T : MonoBehaviour {
 				GameObject singleton = new GameObject();
 				_instance = singleton.AddComponent<T>();
 				singleton.name = typeof(T).ToString();
+				DontDestroyOnLoad(singleton);
 			}
-
-			DontDestroyOnLoad(_instance.gameObject);
 
 			return _instance;
 		}

@@ -30,19 +30,20 @@ public class MisGroundGenerator : MonoBehaviour {
 		}
 	}
 
-	public void GenerateLevel() {
+	public GameObject GenerateLevel() {
 
-		GenerateGround (_startPosition.x, _endPosition.x, 
-		                _startPosition.y, MisConstants.TILE_SIZE/100f);
+		GameObject ground = GenerateGround (_startPosition.x, _endPosition.x, 
+		                					_startPosition.y, MisConstants.TILE_SIZE/100f);
+		return ground;
 	}
 
-	private void GenerateGround(float startPosX, float endPosX, float startPosY, float tileSize) {
-
-		if (startPosX > endPosX)
-			return;
-
+	private GameObject GenerateGround(float startPosX, float endPosX, float startPosY, float tileSize) {
+	
 		GameObject Ground = new GameObject();
 		Ground.name = "Ground";
+
+		if (startPosX > endPosX)
+			return Ground;
 
 		int gapsSequence = MisConstants.MAX_GAP_SIZE;
 		for (float i = startPosX; i < endPosX; i += tileSize) {
@@ -98,6 +99,8 @@ public class MisGroundGenerator : MonoBehaviour {
 
 			_lastSurface = surfaceI.transform;
 		}
+
+		return Ground;
 	} 
 
 	// Fullfill area below the surface with background tile

@@ -2,40 +2,99 @@
 using System.Collections;
 
 public class MisGameWorld : MisSingleton<MisGameWorld> {
+		
+	private GameObject   	  _heroPrefab;
+	private GameObject      []_enemiesPrefab;
 
-	public MisCamera _misCamera;
-	public MisGroundGenerator _levelGenerator;
-	
-	public GameObject   _heroPrefab;
-	public GameObject []_enemiesPrefab;
+	private MisCamera          _misCamera;
+	private MisGroundGenerator _misLevelGenerator;
+	private MisAudioManager    _misAudioManager;
+	private MisHero 		   _misHero;
 
-	private MisHero _misHero;
+	private Vector2 		   _nextSpawningPoint;
+	private GameObject         _ground;
 
-	private Vector2 _nextSpawningPoint;
-	
 	// Use this for initialization
-	void Awake () {
-	
-		if (!_levelGenerator) {
+	void Start () {
 
-			Debug.LogError("You must define a level generator!");
-			return;
+		DontDestroyOnLoad (gameObject);
+	
+		_misLevelGenerator = FindObjectOfType (typeof(MisGroundGenerator)) as MisGroundGenerator;
+		if (!_misLevelGenerator) {
+
+			GameObject temp = Instantiate(Resources.Load("MisLevelGenerator") as GameObject);
+			_misLevelGenerator = temp.GetComponent<MisGroundGenerator>();
 		}
 
-		_levelGenerator.GenerateLevel ();
+		DontDestroyOnLoad (_misLevelGenerator.gameObject);
 
-		SpawnHero (_nextSpawningPoint);
+		_misAudioManager = FindObjectOfType (typeof(MisAudioManager)) as MisAudioManager;
+		if (!_misAudioManager) {
+
+			GameObject temp = Instantiate(Resources.Load("MisAudioManager") as GameObject);
+			_misAudioManager = temp.GetComponent<MisAudioManager>();
+		}
+
+		_heroPrefab = Resources.Load("Characters/MisHero") as GameObject;
+
+		DontDestroyOnLoad (_misAudioManager.gameObject);
 	}
+
+	void OnLevelWasLoaded(int level) {
 	
-	// Update is called once per frame
-	void Update () {
-	
+		switch (level) {
+
+		case 1:
+			LoadTransictionScreen();
+			break;
+		
+		default:
+			LoadPlayableLevel();
+			break;
+		}
+	}
+
+	void LoadTransictionScreen() {
+
+		if (_ground)
+			_ground.SetActive (false);
+	}
+
+	void LoadPlayableLevel() {
+
+		if (_ground)
+			_ground.SetActive (true);
+		
+		_misCamera = FindObjectOfType (typeof(MisCamera)) as MisCamera;
+		if (!_misCamera) {
+			
+			Debug.LogError ("You must define a camera!");
+			return;
+		}
+		
+		if (!_ground) {
+			
+			_ground = _misLevelGenerator.GenerateLevel ();
+			_ground.transform.parent = transform;
+
+			DontDestroyOnLoad (_ground);
+		} else
+			_ground.SetActive (true);
+		
+		_misAudioManager.PlayBacktrack ();
+		
+		if(_misHero)
+			Destroy(_misHero.gameObject);
+		
+		SpawnHero (_nextSpawningPoint);
 	}
 
 	public void ResetLevel(Vector2 heroSpawningPoint) {
 
+		Destroy(_misHero.gameObject);
+
 		_nextSpawningPoint = heroSpawningPoint;
-		Application.LoadLevel (Application.loadedLevel);
+		MisSceneManager.Instance.LoadScene (Application.loadedLevelName);
 	}
 
 	void SpawnHero(Vector2 spawningPoint) {
@@ -45,10 +104,13 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 		GameObject heroObj = Instantiate (_heroPrefab, spawningPos, Quaternion.identity) as GameObject;
 		heroObj.name = MisConstants.HERO_NAME;
+		heroObj.transform.parent = transform;
 		
 		_misHero = heroObj.GetComponent<MisHero>();
 		
-		if(_misCamera)
+		if (_misCamera) {
 			_misCamera._player = _misHero.gameObject;
+			_misCamera.Move(_misHero.transform.position);
+		}
 	}
 }
