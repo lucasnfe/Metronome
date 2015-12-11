@@ -12,6 +12,7 @@ public class MisCharacter : MonoBehaviour {
 	protected bool  _isAttacking;
 	protected bool  _isOnGround;
 	protected bool  _isDead;
+
 	protected float _moveX;
 
 	public  float _moveSpeed;
@@ -24,7 +25,7 @@ public class MisCharacter : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	public virtual void Update () {
+	protected virtual void FixedUpdate () {
 	
 		if (!_isDead) {
 
@@ -35,21 +36,31 @@ public class MisCharacter : MonoBehaviour {
 			_deltaPos = DetectCollision ();
 
 			// Detect collision and integrate velocity to position
-			transform.position += (Vector3)_deltaPos;
-		
-			_animator.SetBool ("isRunning", IsRunning () && !_isAttacking);
-			_animator.SetBool ("isJumping", IsJumping () && !_isAttacking);
+			transform.Translate(_deltaPos);
 
+			// This should be the last method
+			UpdateState();
+		}
+	}
+
+	private void UpdateState() {
+
+		if (_animator) {
+
+			_animator.SetBool ("isRunning", IsRunning () && !_isAttacking);
+		
+			_animator.SetBool ("isJumping", (IsJumping () || IsFalling ()) && !_isAttacking);
+		
 			_animator.SetBool ("isShooting", _isAttacking);
 		}
 	}
-	
+
 	private void CalculateVelocity() {
-
-		_velocity.x  = Mathf.Lerp(_velocity.x, _moveSpeed * _moveX, 15f * Time.deltaTime);
-		_velocity.y += MisConstants.GRAVITY;
-
+	
+		_velocity.x = _moveX * _moveSpeed * Time.deltaTime;
 		_velocity.x = Mathf.Clamp (_velocity.x, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
+
+		_velocity.y += MisConstants.GRAVITY * Time.deltaTime;
 		_velocity.y = Mathf.Clamp (_velocity.y, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
 	}
 	
@@ -61,10 +72,10 @@ public class MisCharacter : MonoBehaviour {
 		Vector2 center = col.offset;
 		Vector2 entityPosition = transform.position;
 		
-		float correY = DetectVerticalCollition (entityPosition, center, size, MisConstants.COLLISION_RAYS);
-		
-		float correX = 0f;
-		if(_velocity.x != 0f)
+		float correY = DetectVerticalCollition   (entityPosition, center, size, MisConstants.COLLISION_RAYS);
+
+		float correX = _velocity.x;
+		if(_moveX != 0f)
 			correX = DetectHorizontalCollition (entityPosition, center, size, MisConstants.COLLISION_RAYS);
 
 		return new Vector2(correX, correY);
@@ -72,7 +83,7 @@ public class MisCharacter : MonoBehaviour {
 	
 	private float DetectHorizontalCollition(Vector2 entityPosition, Vector2 center, Vector2 size, int nRays) {
 		
-		float deltaX = _velocity.x * Time.deltaTime;
+		float deltaX = _velocity.x;
 		
 		float dirX = transform.localScale.x;
 
@@ -98,7 +109,7 @@ public class MisCharacter : MonoBehaviour {
 			if (!hit.collider.isTrigger) {
 				
 				_velocity.x = 0f;
-				
+
 				float distance = Mathf.Abs (x - hit.point.x);
 				
 				if (distance >= MisConstants.PLAYER_SKIN)
@@ -120,7 +131,7 @@ public class MisCharacter : MonoBehaviour {
 		
 		_isOnGround = false;
 		
-		float deltaY = _velocity.y * Time.deltaTime;
+		float deltaY = _velocity.y;
 
 		float dirX = -transform.localScale.x;
 		float dirY =  Mathf.Sign(_velocity.y);
@@ -177,14 +188,25 @@ public class MisCharacter : MonoBehaviour {
 	
 	}
 
+	protected void Flip(float dir) {
+
+		float nextDir = Mathf.Sign (dir);
+		transform.localScale = new Vector3 (nextDir, 1f, 1f);
+	}
+
 	protected bool IsFlipped() {
 		
-		return (transform.localScale.x == -1f);
+		return transform.localScale.x == -1f;
 	}
 	
 	protected bool IsJumping() {
 		
-		return (_velocity.y > 0f);
+		return _velocity.y > 0f;
+	}
+
+	protected bool IsFalling() {
+		
+		return _velocity.y < 0f && !_isOnGround;
 	}
 	
 	protected bool IsRunning() {

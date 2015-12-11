@@ -8,7 +8,7 @@ public class MisCamera : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 	
-
+		Camera.main.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
 	}
 
 	public void Move(Vector2 dest) {
@@ -17,7 +17,7 @@ public class MisCamera : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void LateUpdate () {
+	void Update () {
 
 		if (!_player)
 			return;
@@ -26,12 +26,12 @@ public class MisCamera : MonoBehaviour {
 		camWindow.center = new Vector3 (camWindow.center.x, camWindow.center.y, _player.transform.position.z);
 
 		Bounds heroBox = _player.GetComponent<BoxCollider2D> ().bounds;
-		heroBox.center = new Vector3 (heroBox.center.x, heroBox.center.y, _player.transform.position.z);
+		heroBox.center = _player.transform.position;
 
 		Vector2 heroVel = _player.GetComponent<MisHero> ().GetDeltaPos ();
 
 		// Velocity to move the camera, it will be applied to hero vel
-		Vector2 cameraVel = new Vector2 ();
+		Vector2 cameraVel = Vector2.one;
 
 		float dirX = _player.transform.localScale.x;
 
@@ -39,16 +39,16 @@ public class MisCamera : MonoBehaviour {
 		if (dirX == 1f) {
 
 			float boundX = heroBox.center.x - heroBox.extents.x;
-			cameraVel.x = Mathf.Lerp (1.5f, 1f, camWindow.min.x - boundX);
+			float speed = camWindow.min.x - boundX > 0f ? camWindow.min.x - boundX : 0f;
+			cameraVel.x = Mathf.Lerp (1.5f, 1f, speed);
 		} else {
 
 			float boundX = heroBox.center.x + heroBox.extents.x;
-			cameraVel.x = Mathf.Lerp (1.5f, 1f, boundX - camWindow.max.x);
+			float speed = boundX - camWindow.max.x > 0f ? boundX - camWindow.max.x : 0f;
+			cameraVel.x = Mathf.Lerp (1.5f, 1f, speed);
 		}
 
-		transform.position += Vector3.right * (heroVel.x * cameraVel.x);
-
-		float posY = Mathf.Lerp (transform.position.y, _player.transform.position.y, 4f * Time.deltaTime);
-		transform.position = new Vector3 (transform.position.x, posY, transform.position.z);
+		cameraVel = new Vector2 (heroVel.x * cameraVel.x, heroVel.y * cameraVel.y);
+		transform.position += new Vector3 (cameraVel.x, cameraVel.y, 0f);
 	}
 }

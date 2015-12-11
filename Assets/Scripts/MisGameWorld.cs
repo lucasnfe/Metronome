@@ -1,29 +1,31 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MisGameWorld : MisSingleton<MisGameWorld> {
 		
-	private GameObject   	  _heroPrefab;
-	private GameObject      []_enemiesPrefab;
+	private GameObject   	   _heroPrefab;
+	private GameObject       []_enemiesPrefab;
+
+	private GameObject         _level;
 
 	private MisCamera          _misCamera;
-	private MisGroundGenerator _misLevelGenerator;
+	private MisLevelGenerator  _misLevelGenerator;
 	private MisAudioManager    _misAudioManager;
-	private MisHero 		   _misHero;
 
+	private MisHero 		   _misHero;
 	private Vector2 		   _nextSpawningPoint;
-	private GameObject         _ground;
 
 	// Use this for initialization
 	void Start () {
 
 		DontDestroyOnLoad (gameObject);
 	
-		_misLevelGenerator = FindObjectOfType (typeof(MisGroundGenerator)) as MisGroundGenerator;
+		_misLevelGenerator = FindObjectOfType (typeof(MisLevelGenerator)) as MisLevelGenerator;
 		if (!_misLevelGenerator) {
 
-			GameObject temp = Instantiate(Resources.Load("MisLevelGenerator") as GameObject);
-			_misLevelGenerator = temp.GetComponent<MisGroundGenerator>();
+			GameObject temp = Instantiate(Resources.Load("Generators/MisLevelGenerator") as GameObject);
+			_misLevelGenerator = temp.GetComponent<MisLevelGenerator>();
 		}
 
 		DontDestroyOnLoad (_misLevelGenerator.gameObject);
@@ -35,17 +37,31 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 			_misAudioManager = temp.GetComponent<MisAudioManager>();
 		}
 
-		_heroPrefab = Resources.Load("Characters/MisHero") as GameObject;
-
 		DontDestroyOnLoad (_misAudioManager.gameObject);
+
+		// Loading hero prefab
+		_heroPrefab = Resources.Load("Characters/StreamPlayer") as GameObject;
+
+		// Loading enemies prefabs
+		Object[] objects = Resources.LoadAll("Characters/Enemies");
+
+		_enemiesPrefab = new GameObject[objects.Length];
+		for (int i = 0; i < objects.Length; i++)
+			_enemiesPrefab[i] = (GameObject)objects[i];
 	}
 
 	void OnLevelWasLoaded(int level) {
 	
 		switch (level) {
 
-		case 1:
+		case 0:
 			LoadTransictionScreen();
+			break;
+
+		case 1:
+			break;
+
+		case 2:
 			break;
 		
 		default:
@@ -56,14 +72,14 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 	void LoadTransictionScreen() {
 
-		if (_ground)
-			_ground.SetActive (false);
+		if (_level)
+			_level.SetActive (false);
 	}
 
 	void LoadPlayableLevel() {
 
-		if (_ground)
-			_ground.SetActive (true);
+		if (_level)
+			_level.SetActive (true);
 		
 		_misCamera = FindObjectOfType (typeof(MisCamera)) as MisCamera;
 		if (!_misCamera) {
@@ -72,17 +88,18 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 			return;
 		}
 		
-		if (!_ground) {
+		if (!_level) {
 			
-			_ground = _misLevelGenerator.GenerateLevel ();
-			_ground.transform.parent = transform;
+			_level = _misLevelGenerator.GenerateLevel ();
+			_level.transform.parent = transform;
 
-			DontDestroyOnLoad (_ground);
+			DontDestroyOnLoad (_level);
 		} else
-			_ground.SetActive (true);
+			_level.SetActive (true);
 		
 		_misAudioManager.PlayBacktrack ();
-		
+
+		// Reset the hero
 		if(_misHero)
 			Destroy(_misHero.gameObject);
 		
@@ -99,18 +116,32 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 	void SpawnHero(Vector2 spawningPoint) {
 
-		float zPos = _heroPrefab.transform.position.z;
-		Vector3 spawningPos = new Vector3(spawningPoint.x, spawningPoint.y, zPos);
+		_misHero = SpawnCharacter (_heroPrefab, spawningPoint).GetComponent<MisHero>();
 
-		GameObject heroObj = Instantiate (_heroPrefab, spawningPos, Quaternion.identity) as GameObject;
-		heroObj.name = MisConstants.HERO_NAME;
-		heroObj.transform.parent = transform;
-		
-		_misHero = heroObj.GetComponent<MisHero>();
-		
 		if (_misCamera) {
 			_misCamera._player = _misHero.gameObject;
 			_misCamera.Move(_misHero.transform.position);
 		}
+	}
+
+	public void SpawnEnemy(int enemyType, Vector2 spawningPoint) {
+
+		GameObject enemyPrefab = _enemiesPrefab[enemyType];
+		BoxCollider2D collider = enemyPrefab.GetComponent<BoxCollider2D> ();
+
+		Vector2 pos = new Vector2 (spawningPoint.x, spawningPoint.y + collider.bounds.size.y);
+		SpawnCharacter (enemyPrefab, pos);
+	}
+
+	GameObject SpawnCharacter(GameObject characterPrefab, Vector2 spawningPoint) {
+		
+		float zPos = characterPrefab.transform.position.z;
+		Vector3 spawningPos = new Vector3(spawningPoint.x, spawningPoint.y, zPos);
+		
+		GameObject charObj = Instantiate (characterPrefab, spawningPos, Quaternion.identity) as GameObject;
+		charObj.name = characterPrefab.name;
+		charObj.transform.parent = transform;
+
+		return charObj;
 	}
 }

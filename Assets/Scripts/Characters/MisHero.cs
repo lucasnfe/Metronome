@@ -9,30 +9,33 @@ public class MisHero : MisCharacter {
 	}
 
 	// Update is called once per frame
-	public override void Update () {
+	protected override void FixedUpdate () {
 
 		if (!_isDead) {
 
-			// Detect player input
 			KeyboardControl ();
 		}
 
-		// Update character physics
-		base.Update ();		
+		base.FixedUpdate ();
 	}
 
 	private void KeyboardControl() {
-	
+
 		_moveX = 0f;
 
-		if (Input.GetKey (KeyCode.RightArrow) || Input.GetKey (KeyCode.LeftArrow)) {
-
-			_moveX = Input.GetAxis("Horizontal");
-			transform.localScale = new Vector3 (Mathf.Sign(_moveX), 1f, 1f);
+		if (Input.GetKey (KeyCode.RightArrow)) {
+			_moveX = 1f;
+			Flip (_moveX);
 		}
 
-		if (_isOnGround && Input.GetKeyDown (KeyCode.UpArrow))
-			_velocity.y = _jumpSpeed;
+		if (Input.GetKey (KeyCode.LeftArrow)) {
+			_moveX = -1f;
+			Flip (_moveX);
+		}
+
+		if (Input.GetKeyDown (KeyCode.UpArrow))
+			if(_isOnGround)
+				_velocity.y += _jumpSpeed * Time.fixedDeltaTime;
 
 		_isAttacking = Input.GetKey (KeyCode.Space);
 	}

@@ -25,7 +25,7 @@ public class MisSceneManager : MisSingleton<MisSceneManager> {
 		if(showLoadingScreen) 
 			Application.LoadLevel("LoadingScene");
 		
-		yield return new WaitForSeconds(0.1f);
+		yield return new WaitForSeconds(0.01f);
 		
 		if (actioneBetweenScenes != null)
 			actioneBetweenScenes();
