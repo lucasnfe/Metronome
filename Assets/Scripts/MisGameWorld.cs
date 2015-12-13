@@ -40,7 +40,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		DontDestroyOnLoad (_misAudioManager.gameObject);
 
 		// Loading hero prefab
-		_heroPrefab = Resources.Load("Characters/StreamPlayer") as GameObject;
+		_heroPrefab = Resources.Load("Characters/MisPlayer") as GameObject;
 
 		// Loading enemies prefabs
 		Object[] objects = Resources.LoadAll("Characters/Enemies");

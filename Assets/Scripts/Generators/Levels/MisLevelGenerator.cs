@@ -43,6 +43,7 @@ public class MisLevelGenerator : MonoBehaviour {
 
 		GameObject tile = new GameObject();
 		tile.name = "Surface";
+		tile.tag  = MisConstants.TAG_WALL;
 		tile.isStatic = true;
 		tile.transform.parent = parent;
 		tile.transform.position = position;	

@@ -2,10 +2,18 @@ using UnityEngine;
 using System.Collections;
 
 public class MisHero : MisCharacter {
-	
-	public override void Start() {
+
+	private MisGun _gun;
+	private float  _shootDelay;
+	private bool   _isAtWall;
+
+	protected override void Start() {
 
 		base.Start ();
+
+		// Generate a random gun.
+		_gun = MisGunGenerator.GenerateGun();
+		_shootDelay = _gun.frequency;
 	}
 
 	// Update is called once per frame
@@ -21,31 +29,73 @@ public class MisHero : MisCharacter {
 
 	private void KeyboardControl() {
 
-		_moveX = 0f;
+		// Vertical moviment
+		_move.y = 0f;
 
-		if (Input.GetKey (KeyCode.RightArrow)) {
-			_moveX = 1f;
-			Flip (_moveX);
-		}
+		if (Input.GetKeyDown (KeyCode.UpArrow)) {
 
-		if (Input.GetKey (KeyCode.LeftArrow)) {
-			_moveX = -1f;
-			Flip (_moveX);
-		}
-
-		if (Input.GetKeyDown (KeyCode.UpArrow))
 			if(_isOnGround)
-				_velocity.y += _jumpSpeed * Time.fixedDeltaTime;
+				_move.y = 1f;
 
-		_isAttacking = Input.GetKey (KeyCode.Space);
+			if (_isAtWall) {
+				_velocity.y = 0f;
+				_move.y = 1f;
+			}
+		}
+
+		_isAtWall = false;
+
+		// Horizontal moviment
+		_move.x = Input.GetAxisRaw ("Horizontal");
+		if (_move.x != 0f)
+			Flip (_move.x);
+			
+		// Attacking
+		_isAttacking = false;
+
+		if (Input.GetKey (KeyCode.Space)) {
+
+			if (_shootDelay >= _gun.frequency) {
+
+				Shoot ();
+				_shootDelay = 0f;
+				_isAttacking = true;
+			}
+
+			_shootDelay += Time.fixedDeltaTime * 100f;
+		}
+
+		if (Input.GetKeyUp (KeyCode.Space)) {
+
+			_shootDelay = _gun.frequency;
+		}
 	}
 
-	protected override void TriggerEvent(Collider2D collider) {
+	void Shoot() {
 
-		if (collider.gameObject.tag == MisConstants.TAG_KILLZONE) {
+		float dir = transform.localScale.x;
 
-			MisKillZone killZone = collider.gameObject.GetComponent<MisKillZone> ();
+		Vector3 shootPos = transform.position;
+		shootPos.x += (_boundingBox.size.x * 0.5f + 0.05f) * dir;
+
+		_gun.Fire (shootPos, dir);
+	}
+
+	protected override void DidEnterEventCollision(RaycastHit2D hit) {
+
+		if (hit.collider.gameObject.tag == MisConstants.TAG_KILLZONE) {
+
+			MisKillZone killZone = hit.collider.gameObject.GetComponent<MisKillZone> ();
 			MisGameWorld.Instance.ResetLevel(killZone.respawnPosition);
+		}
+	}
+
+	protected override void DidEnterCollision(RaycastHit2D hit) {
+
+		if (hit.collider.tag == "Wall") {
+			if (hit.normal == Vector2.right || hit.normal == -Vector2.right) {
+				_isAtWall = true;
+			}
 		}
 	}
 }
