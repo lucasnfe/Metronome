@@ -17,14 +17,10 @@ public class MisHero : MisCharacter {
 	}
 
 	// Update is called once per frame
-	protected override void FixedUpdate () {
+	void Update() {
 
-		if (!_isDead) {
-
+		if (!_isDead)
 			KeyboardControl ();
-		}
-
-		base.FixedUpdate ();
 	}
 
 	private void KeyboardControl() {
@@ -38,17 +34,17 @@ public class MisHero : MisCharacter {
 				_move.y = 1f;
 
 			if (_isAtWall) {
+				
 				_velocity.y = 0f;
-				_move.y = 1f;
+				_move = Vector2.one;
 			}
 		}
 
-		_isAtWall = false;
-
 		// Horizontal moviment
-		_move.x = Input.GetAxisRaw ("Horizontal");
-		if (_move.x != 0f)
-			Flip (_move.x);
+		_move.x = Input.GetAxisRaw("Horizontal");
+		Flip (_move.x);
+
+		_isAtWall = false;
 			
 		// Attacking
 		_isAttacking = false;
@@ -62,7 +58,7 @@ public class MisHero : MisCharacter {
 				_isAttacking = true;
 			}
 
-			_shootDelay += Time.fixedDeltaTime * 100f;
+			_shootDelay += Time.deltaTime;
 		}
 
 		if (Input.GetKeyUp (KeyCode.Space)) {

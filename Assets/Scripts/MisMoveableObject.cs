@@ -17,6 +17,7 @@ public class MisMoveableObject : MonoBehaviour {
 	public int   _raysAmount;
 	public float _moveSpeed;
 	public float _jumpSpeed;
+	public float _friction;
 	public bool  _applyGravity;
 	public bool  _detectHorCollision;
 	public bool  _detectVerCollision;
@@ -33,7 +34,7 @@ public class MisMoveableObject : MonoBehaviour {
 		CalculateVelocity ();
 
 		// Detect collisiong and modify velocity vector
-		_deltaPos = DetectCollision ();
+		DetectCollision ();
 
 		// Detect collision and integrate velocity to position
 		transform.Translate(_deltaPos);
@@ -41,18 +42,18 @@ public class MisMoveableObject : MonoBehaviour {
 		
 	private void CalculateVelocity() {
 
-		_velocity.x = _move.x * _moveSpeed * Time.deltaTime;
-		_velocity.x = Mathf.Clamp (_velocity.x, -MisConstants.MAX_SPEED, _raysAmount);
+		_velocity.x = Mathf.Lerp(_velocity.x, _move.x * _moveSpeed * Time.deltaTime, _friction);
+		_velocity.x = Mathf.Clamp (_velocity.x, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
 
 		if (_applyGravity)
 			_velocity.y += MisConstants.GRAVITY * Time.deltaTime;
 		
 		_velocity.y += _move.y * _jumpSpeed * Time.deltaTime;
-		_velocity.y = Mathf.Clamp (_velocity.y, -MisConstants.MAX_SPEED, _raysAmount);
+		_velocity.y = Mathf.Clamp (_velocity.y, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
 	}
 
-	private Vector2 DetectCollision() {
-
+	private void DetectCollision() {
+		
 		Vector2 size = _boundingBox.bounds.size;
 		Vector2 center = _boundingBox.offset;
 		Vector2 entityPosition = transform.position;
@@ -62,10 +63,11 @@ public class MisMoveableObject : MonoBehaviour {
 			correY = DetectVerticalCollition   (entityPosition, center, size, _raysAmount);
 
 		float correX = _velocity.x;
-		if (_detectHorCollision && _move.x != 0f)
+		if (_detectHorCollision && _velocity.x != 0f)
 			correX = DetectHorizontalCollition (entityPosition, center, size, _raysAmount);
-		
-		return new Vector2(correX, correY);
+
+		_deltaPos.x = correX;
+		_deltaPos.y = correY;
 	}
 
 	private float DetectHorizontalCollition(Vector2 entityPosition, Vector2 center, Vector2 size, int nRays) {
@@ -89,7 +91,7 @@ public class MisMoveableObject : MonoBehaviour {
 		Vector2 rayX = new Vector2 (x, y);
 
 		RaycastHit2D hit = Physics2D.Raycast (rayX, new Vector2 (dirX, 0), Mathf.Abs (deltaX));
-		Debug.DrawRay (rayX, new Vector2 (dirX, 0));
+//		Debug.DrawRay (rayX, new Vector2 (dirX, 0));
 
 		if (hit.collider) {
 
@@ -147,7 +149,7 @@ public class MisMoveableObject : MonoBehaviour {
 		Vector2 rayY = new Vector2(x, y);
 
 		RaycastHit2D hit = Physics2D.Raycast(rayY, new Vector2(0, dirY), Mathf.Abs(deltaY));
-		Debug.DrawRay(new Vector2(x, y),  new Vector2(0, dirY));
+//		Debug.DrawRay(new Vector2(x, y),  new Vector2(0, dirY));
 
 		if (hit.collider) {
 
@@ -185,6 +187,9 @@ public class MisMoveableObject : MonoBehaviour {
 
 	protected void Flip(float dir) {
 
+		if (dir == 0f)
+			return;
+
 		float nextDir = Mathf.Sign (dir);
 		transform.localScale = new Vector3 (nextDir, 1f, 1f);
 	}
@@ -206,7 +211,7 @@ public class MisMoveableObject : MonoBehaviour {
 
 	protected bool IsRunning() {
 
-		return (_move.x != 0f);
+		return (_velocity.x != 0f);
 	}
 
 }

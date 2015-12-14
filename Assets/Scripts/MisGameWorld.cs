@@ -119,7 +119,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		_misHero = SpawnCharacter (_heroPrefab, spawningPoint).GetComponent<MisHero>();
 
 		if (_misCamera) {
-			_misCamera._player = _misHero.gameObject;
+			_misCamera._player = _misHero;
 			_misCamera.Move(_misHero.transform.position);
 		}
 	}

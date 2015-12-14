@@ -3,12 +3,19 @@ using System.Collections;
 
 public class MisCamera : MonoBehaviour {
 
-	public GameObject _player;
+	public MisHero _player;
+
+	private BoxCollider2D _heroBoundingBox;
+	private BoxCollider2D _cameraWindow;
+
+	private bool _isChasingPlayer;
 
 	// Use this for initialization
 	void Start () {
 	
 		Camera.main.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
+
+		_cameraWindow = GetComponent<BoxCollider2D> ();
 	}
 
 	public void Move(Vector2 dest) {
@@ -17,38 +24,42 @@ public class MisCamera : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void LateUpdate () {
 
 		if (!_player)
 			return;
+
+		Vector2 heroVel = _player.GetDeltaPos ();
 	
-		Bounds camWindow = GetComponent<BoxCollider2D> ().bounds;
-		camWindow.center = new Vector3 (camWindow.center.x, camWindow.center.y, _player.transform.position.z);
+		// Camera horizontal velocity
+		float cameraVelX = 0f;
 
-		Bounds heroBox = _player.GetComponent<BoxCollider2D> ().bounds;
-		heroBox.center = _player.transform.position;
+		if (heroVel.x > 0f) {
 
-		Vector2 heroVel = _player.GetComponent<MisHero> ().GetDeltaPos ();
+			float speed = _cameraWindow.bounds.min.x - _player.transform.position.x;
+			cameraVelX = Mathf.Lerp (1.5f, 1f, speed);
+		} 
 
-		// Velocity to move the camera, it will be applied to hero vel
-		Vector2 cameraVel = Vector2.one;
+		if (heroVel.x < 0f) {
 
-		float dirX = _player.transform.localScale.x;
-
-		// Check horizontal contact
-		if (dirX == 1f) {
-
-			float boundX = heroBox.center.x - heroBox.extents.x;
-			float speed = camWindow.min.x - boundX > 0f ? camWindow.min.x - boundX : 0f;
-			cameraVel.x = Mathf.Lerp (1.5f, 1f, speed);
-		} else {
-
-			float boundX = heroBox.center.x + heroBox.extents.x;
-			float speed = boundX - camWindow.max.x > 0f ? boundX - camWindow.max.x : 0f;
-			cameraVel.x = Mathf.Lerp (1.5f, 1f, speed);
+			float speed = _player.transform.position.x - _cameraWindow.bounds.max.x;
+			cameraVelX = Mathf.Lerp (1.5f, 1f, speed);
 		}
 
-		cameraVel = new Vector2 (heroVel.x * cameraVel.x, heroVel.y * cameraVel.y);
-		transform.position += new Vector3 (cameraVel.x, cameraVel.y, 0f);
+		// Camera vetical velocity
+		float cameraVelY = 0f;
+			
+		if (heroVel.y > 0f) {
+
+			if (_player.transform.position.y - _cameraWindow.bounds.min.y >= _cameraWindow.bounds.size.y)
+				cameraVelY = heroVel.y;
+		}
+		else {
+
+			if (_cameraWindow.bounds.max.y -_player.transform.position.y >= _cameraWindow.bounds.size.y)
+				cameraVelY = heroVel.y;
+		}
+
+		transform.position += new Vector3(cameraVelX * heroVel.x, cameraVelY, 0f);
 	}
 }

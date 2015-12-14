@@ -4,9 +4,9 @@ using System.Collections;
 public class MisConstants {
 
 	// PHYSICS SYSTEM CONSTANTS
-	public static readonly float GRAVITY              = Physics2D.gravity.y/2f;
+	public static readonly float GRAVITY              = Physics2D.gravity.y/20f;
 	public static readonly float PLAYER_SKIN          = 0.0005f;
-	public static readonly float MAX_SPEED     		  = 5f;
+	public static readonly float MAX_SPEED     		  = 1f;
 
 	// TILE_SIZE = A power of two number -1f in order the avoid placement bugs
 	public static readonly float TILE_SIZE      	  = 64f - 1f;

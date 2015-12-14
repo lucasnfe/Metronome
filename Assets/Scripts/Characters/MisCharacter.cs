@@ -15,17 +15,11 @@ public class MisCharacter : MisMoveableObject {
 
 		_animator = GetComponent<Animator>();
 	}
-	
-	// Update is called once per frame
-	protected override void FixedUpdate () {
-	
-		if (!_isDead) {
 
-			base.FixedUpdate ();
+	void Update() {
 
-			// This should be the last method
+		if (!_isDead)
 			UpdateState();
-		}
 	}
 
 	private void UpdateState() {
