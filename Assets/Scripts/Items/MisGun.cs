@@ -4,6 +4,7 @@ using System.Collections;
 public class MisGun {
 
 	public int       damage     { get; set; }
+	public float     speed      { get; set; }
 	public float     frequency  { get; set; }
 	public Texture2D texture    { get; set; }
 
@@ -16,9 +17,10 @@ public class MisGun {
 		_bullets = new MisObjectPool(_bulletTemplate);
 	}
 
-	public MisGun(int damage, float frequency, Texture2D texture) {
+	public MisGun(int damage, float speed, float frequency, Texture2D texture) {
 
 		this.damage    = damage;
+		this.speed     = speed;
 		this.frequency = frequency;
 		this.texture   = texture;
 	}
@@ -28,6 +30,7 @@ public class MisGun {
 		GameObject obj = _bullets.GetFreeObject ();
 		MisBullet bullet = obj.GetComponent<MisBullet> ();
 
+		bullet._moveSpeed = speed;
 		bullet.firedGun = this;
 		bullet.gameObject.layer = LayerMask.NameToLayer ("Ignore Raycast");
 		bullet.transform.position = startPos;

@@ -4,18 +4,22 @@ using System.Collections;
 public class MisCamera : MonoBehaviour {
 
 	public MisHero _player;
-
-	private BoxCollider2D _heroBoundingBox;
 	private BoxCollider2D _cameraWindow;
-
-	private bool _isChasingPlayer;
 
 	// Use this for initialization
 	void Start () {
+
+		float originalSize = Camera.main.orthographicSize;
 	
 		Camera.main.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
 
 		_cameraWindow = GetComponent<BoxCollider2D> ();
+
+		Vector2 adaptedSize = Vector2.zero;
+		adaptedSize.x = (Camera.main.orthographicSize * _cameraWindow.size.x) / originalSize;
+		adaptedSize.y = (Camera.main.orthographicSize * _cameraWindow.size.y) / originalSize;
+
+		_cameraWindow.size = adaptedSize;
 	}
 
 	public void Move(Vector2 dest) {
@@ -36,14 +40,13 @@ public class MisCamera : MonoBehaviour {
 
 		if (heroVel.x > 0f) {
 
-			float speed = _cameraWindow.bounds.min.x - _player.transform.position.x;
-			cameraVelX = Mathf.Lerp (1.5f, 1f, speed);
-		} 
+			if (_player.transform.position.x - _cameraWindow.bounds.min.x >= _cameraWindow.bounds.size.x)
+				cameraVelX = heroVel.x;
+		}
+		else {
 
-		if (heroVel.x < 0f) {
-
-			float speed = _player.transform.position.x - _cameraWindow.bounds.max.x;
-			cameraVelX = Mathf.Lerp (1.5f, 1f, speed);
+			if (_cameraWindow.bounds.max.x -_player.transform.position.x >= _cameraWindow.bounds.size.x)
+				cameraVelX = heroVel.x;
 		}
 
 		// Camera vetical velocity
@@ -60,6 +63,6 @@ public class MisCamera : MonoBehaviour {
 				cameraVelY = heroVel.y;
 		}
 
-		transform.position += new Vector3(cameraVelX * heroVel.x, cameraVelY, 0f);
+		transform.position += new Vector3(cameraVelX, cameraVelY, 0f);
 	}
 }

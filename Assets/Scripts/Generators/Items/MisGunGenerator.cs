@@ -13,6 +13,9 @@ public static class MisGunGenerator {
 		// Set a random frequency
 		gun.frequency = Random.Range(0.5f, 2f);
 
+		// Set a random speed
+		gun.speed = Random.Range(10f, 20f)/gun.frequency;
+
 		// Create a new 2x2 texture ARGB32 (32 bit with alpha) and no mipmaps
 		gun.texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
 
