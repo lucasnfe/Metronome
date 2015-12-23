@@ -30,7 +30,7 @@ public class MisLevelGenerator : MonoBehaviour {
 		_level = new GameObject();
 		_level.name = "Level";
 
-		GenerateLevel (_startPosition.x, _endPosition.x, _startPosition.y, MisConstants.TILE_SIZE/MisConstants.PIXEL_UNIT);
+		GenerateLevel (_startPosition.x, _endPosition.x, _startPosition.y, (float)MisConstants.TILE_SIZE/MisConstants.PIXEL_UNIT);
 
 		return _level;
 	}

@@ -23,7 +23,10 @@ public class MisMoveableObject : MonoBehaviour {
 	public bool  _detectHorCollision;
 	public bool  _detectVerCollision;
 
-	private Dictionary<Vector2, RaycastHit2D> _collisions;
+	private RaycastHit2D _rayHit;
+
+	private Dictionary<Vector2, RaycastHit2D> _vertCollisions;
+	private Dictionary<Vector2, RaycastHit2D> _horicollisions;
 
 	// Methods to access properties
 	public Vector2 GetDeltaPos() {  return _deltaPos; }
@@ -31,7 +34,11 @@ public class MisMoveableObject : MonoBehaviour {
 	protected virtual void Start() {
 
 		_boundingBox = GetComponent<BoxCollider2D> ();
-		_collisions = new Dictionary<Vector2, RaycastHit2D> ();
+
+		_vertCollisions = new Dictionary<Vector2, RaycastHit2D> ();
+		_horicollisions = new Dictionary<Vector2, RaycastHit2D> ();
+
+		_rayHit = new RaycastHit2D ();
 	}
 
 	// Update is called once per frame
@@ -67,29 +74,39 @@ public class MisMoveableObject : MonoBehaviour {
 
 		float deltaY = _velocity.y;
 		if (_detectVerCollision)
-			deltaY = DetectVerticalCollision (entityPosition, center, size, _raysAmount);
+			deltaY = DetectVerticalCollision (entityPosition, center, size);
 
 		float deltaX = _velocity.x;
 		if (_detectHorCollision && _velocity.x != 0f)
-			deltaX = DetectHorizontalCollision (entityPosition, center, size, _raysAmount);
+			deltaX = DetectHorizontalCollision (entityPosition, center, size);
 
 		_deltaPos.x = deltaX;
 		_deltaPos.y = deltaY;
 	}
 
-	private float DetectHorizontalCollision(Vector2 entityPosition, Vector2 center, Vector2 size, int nRays) {
+	private float DetectHorizontalCollision(Vector2 entityPosition, Vector2 center, Vector2 size) {
 
 		float deltaX = _velocity.x;
+							
+		for (int rayPos = 0; rayPos < _raysAmount; rayPos++) {
 
-		int rayPos = 0;
-		for (; rayPos < nRays; rayPos++)
-			if(xAxisRaycasts (entityPosition, center, size, rayPos, ref deltaX))
+			_rayHit = xAxisRaycasts (entityPosition, center, size, rayPos, ref deltaX);
+			if (_rayHit.collider)
 				break;
+		}
 
+		if (_rayHit.collider == null) {
+
+			foreach (RaycastHit2D hit in _horicollisions.Values)
+				DidExitCollision (hit);
+
+			_horicollisions.Clear ();
+		}
+			
 		return deltaX;
 	}
 
-	private bool xAxisRaycasts(Vector2 entityPosition, Vector2 center, Vector2 size, int i, ref float deltaX) {
+	private RaycastHit2D xAxisRaycasts(Vector2 entityPosition, Vector2 center, Vector2 size, int i, ref float deltaX) {
 
 		float dirX = transform.localScale.x;
 
@@ -113,49 +130,60 @@ public class MisMoveableObject : MonoBehaviour {
 				else
 					deltaX = 0f;
 
-				if (!_collisions.ContainsKey(hit.transform.position)) {
+				if (!_horicollisions.ContainsKey(hit.transform.position)) {
 
-					_collisions [hit.transform.position] = hit;
+					_horicollisions [hit.transform.position] = hit;
 					DidEnterCollision (hit);
 				} 
 				else
-					DidStayCollision (_collisions [hit.transform.position]);
+					DidStayCollision (_horicollisions [hit.transform.position]);
 
-				return true;
+				return hit;
 			}
 
 			DidEnterEventCollision (hit);
 		}
 
-		foreach (RaycastHit2D col in _collisions.Values)
-			DidExitCollision (col);
-
-		_collisions.Clear ();
-
-		return false;
+		return hit;
 	}
-
-	private float DetectVerticalCollision(Vector2 entityPosition, Vector2 center, Vector2 size, int nRays) {
+		
+	private float DetectVerticalCollision(Vector2 entityPosition, Vector2 center, Vector2 size) {
 
 		_isOnGround = false;
 
 		float deltaY = _velocity.y;
 
 		if (transform.localScale.x == 1f) {
-			for (float i = nRays - 1f; i >= 0f; i--)
-				if(yAxisRaycasts (entityPosition, center, size, i, ref deltaY))
+
+			for (int rayPos = _raysAmount - 1; rayPos >= 0; rayPos--) {
+
+				_rayHit = yAxisRaycasts (entityPosition, center, size, rayPos, ref deltaY);
+				if (_rayHit.collider)
 					break;
+			}
 		} 
 		else {
-			for (float j = 0f; j < nRays; j++)
-				if(yAxisRaycasts (entityPosition, center, size, j, ref deltaY))
+			
+			for (int rayPos = 0; rayPos < _raysAmount; rayPos++) {
+
+				_rayHit = yAxisRaycasts (entityPosition, center, size, rayPos, ref deltaY);
+				if (_rayHit.collider)
 					break;
+			}
+		}
+
+		if (_rayHit.collider == null) {
+
+			foreach (RaycastHit2D hit in _vertCollisions.Values)
+				DidExitCollision (hit);
+
+			_vertCollisions.Clear ();
 		}
 
 		return deltaY;
 	}
 
-	private bool yAxisRaycasts(Vector2 entityPosition, Vector2 center, Vector2 size, float i, ref float deltaY) {
+	private RaycastHit2D yAxisRaycasts(Vector2 entityPosition, Vector2 center, Vector2 size, int i, ref float deltaY) {
 
 		float dirX = -transform.localScale.x;
 		float dirY =  Mathf.Sign(_velocity.y);
@@ -181,28 +209,23 @@ public class MisMoveableObject : MonoBehaviour {
 				else
 					deltaY = 0f;
 
-				if (!_collisions.ContainsKey(hit.transform.position)) {
+				if (!_vertCollisions.ContainsKey(hit.transform.position)) {
 
-					_collisions [hit.transform.position] = hit;
+					_vertCollisions [hit.transform.position] = hit;
 					DidEnterCollision (hit);
 				} 
 				else
-					DidStayCollision (_collisions [hit.transform.position]);
+					DidStayCollision (_vertCollisions [hit.transform.position]);
 
-				return true;
+				return hit;
 			}
 
 			DidEnterEventCollision (hit);
 		}
 
-		foreach (RaycastHit2D col in _collisions.Values)
-			DidExitCollision (col);
-
-		_collisions.Clear ();
-
-		return false;
+		return hit;
 	}
-
+		
 	protected virtual void DidEnterEventCollision(RaycastHit2D hit) {
 
 	}

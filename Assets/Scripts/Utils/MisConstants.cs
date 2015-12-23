@@ -9,7 +9,7 @@ public class MisConstants {
 	public static readonly float MAX_SPEED     		  = 1f;
 
 	// TILE_SIZE = A power of two number -1f in order the avoid placement bugs
-	public static readonly float TILE_SIZE      	  = 64f - 1f;
+	public static readonly int   TILE_SIZE      	  = 64 - 1;
 	public static readonly int   PIXEL_UNIT     	  = 100;
 	
 	// LEVEL GENERATOR CONSTANTS
