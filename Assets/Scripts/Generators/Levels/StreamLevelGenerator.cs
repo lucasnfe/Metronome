@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 public class StreamLevelGenerator : MisLevelGenerator {
 
-	public Vector2 roomSize;
+	public int roomWidth;
+	public int roomHeight;
 	private Vector2 _lastRoomDir;
 
 	struct Room {
@@ -23,7 +24,9 @@ public class StreamLevelGenerator : MisLevelGenerator {
 	JSONObject _jsonFile;
 
 	// Use this for initialization
-	 void Awake () {
+	protected override void Awake () {
+
+		base.Awake ();
 
 		_levelData = new List<List<Room>> ();
 
@@ -83,17 +86,18 @@ public class StreamLevelGenerator : MisLevelGenerator {
 					nextRoomIndex = _levelData[i][j + 1].pos;
 								
 				// Build the walls to close the room
-				BuildRoomWalls(startPos, roomSize, tileSize, nextRoomIndex - _levelData[i][j].pos);
+				BuildRoomWalls(startPos, tileSize, nextRoomIndex - _levelData[i][j].pos);
 
 				// Generate the platform challegens using the data points
-				GenerateRoom(startPos, roomSize, tileSize, nextRoomIndex - _levelData[i][j].pos, _levelData[i][j]);
+				 GenerateRoom(startPos, tileSize, nextRoomIndex - _levelData[i][j].pos, _levelData[i][j]);
 
-				startPos += _lastRoomDir * roomSize.x * tileSize;
+				startPos.x += _lastRoomDir.x * roomWidth * tileSize;
+				startPos.y += _lastRoomDir.y * roomHeight * tileSize;
 			}
 		}
 	}
 
-	void GenerateRoom(Vector2 startPos, Vector2 size, float tileSize, Vector2 nextDir, Room room) {
+	void GenerateRoom(Vector2 startPos, float tileSize, Vector2 nextDir, Room room) {
 
 		Sprite sprite = _surface [Random.Range (0, _surface.Length)];
 
@@ -106,7 +110,7 @@ public class StreamLevelGenerator : MisLevelGenerator {
 		averagePoint = new Vector2 (float.Parse (averagePoint.x.ToString ("0.0")) * 10f,
 		                            float.Parse (averagePoint.y.ToString ("0.0")) * 10f);
 
-		Vector2 inverseAveragePoint = size - averagePoint;
+		Vector2 inverseAveragePoint = new Vector2(roomWidth, roomHeight) - averagePoint;
 
 		float dist = Vector2.Distance (averagePoint, inverseAveragePoint);
 		float minPos = Mathf.Min (averagePoint.x, inverseAveragePoint.x);
@@ -131,23 +135,23 @@ public class StreamLevelGenerator : MisLevelGenerator {
 
 		if (Mathf.Abs(nextDir.y) == 1f) {
 
-			int halfHeight =  (int)(roomSize.y/2f);
-			int randomWidth = (int)((Random.value > 0.5f) ? 0 : roomSize.x - 2);
+			int halfHeight =  (int)(roomHeight/2f);
+			int randomWidth = (int)((Random.value > 0.5f) ? 0 : roomWidth - 2);
 			Vector2 pos = new Vector2 (randomWidth, halfHeight) * tileSize;
 
 			BuildCollidableTile (startPos + pos, _level.transform, sprite, _colliderOffset);
 		}
 	}
 
-	void BuildRoomWalls(Vector2 startPos, Vector2 size, float tileSize, Vector2 nextDir) {
+	void BuildRoomWalls(Vector2 startPos, float tileSize, Vector2 nextDir) {
 
 		Sprite sprite = _surface [Random.Range (0, _surface.Length)];
 
 		// Build horizontal walls
-		for (float i = startPos.x; i < startPos.x + size.x * tileSize; i += tileSize) {
+		for (int i = 0; i < roomWidth; i++) {
 
-			Vector2 pos1 = new Vector2 (i, startPos.y);
-			Vector2 pos2 = new Vector2 (i, startPos.y + size.y * tileSize);
+			Vector2 pos1 = startPos + new Vector2 (i, 0) * tileSize;
+			Vector2 pos2 = startPos + new Vector2 (i, roomHeight) * tileSize;
 
 			if(nextDir.y != -1f && _lastRoomDir.y != 1f)
 				BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
@@ -157,10 +161,10 @@ public class StreamLevelGenerator : MisLevelGenerator {
 		}
 	
 		// Build veritcal walls
-		for (float i = startPos.y; i < startPos.y + size.y * tileSize; i += tileSize) {
+		for (int i = 0; i < roomHeight; i++) {
 
-			Vector2 pos1 = new Vector2 (startPos.x, i);
-			Vector2 pos2 = new Vector2 (startPos.x + size.x * tileSize, i);
+			Vector2 pos1 = startPos + new Vector2 (0, i) * tileSize;
+			Vector2 pos2 = startPos + new Vector2 (roomWidth - 1, i) * tileSize;
 
 			if(nextDir.x != -1f && _lastRoomDir.x != 1f)
 				BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
