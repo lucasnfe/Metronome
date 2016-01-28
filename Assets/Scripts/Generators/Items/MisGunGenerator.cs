@@ -5,28 +5,30 @@ public static class MisGunGenerator {
 
 	public static MisGun GenerateGun() {
 
-		MisGun gun = new MisGun ();
-
 		// Set a random damage
-		gun.damage = Random.Range (1, 10);
+		int damage = Random.Range (1, 10);
 
 		// Set a random frequency
-		gun.frequency = Random.Range(0.5f, 2f);
+		float frequency = Random.Range(0.5f, 2f);
 
 		// Set a random speed
-		gun.speed = Random.Range(10f, 20f)/gun.frequency;
+		float speed = Random.Range(10f, 20f)/frequency;
 
-		// Create a new 2x2 texture ARGB32 (32 bit with alpha) and no mipmaps
-		gun.texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
+		int size = Random.Range (2, 6);
 
-		// set the pixel values
-		gun.texture.SetPixel(0, 0, Color.white);
-		gun.texture.SetPixel(1, 0, Color.white);
-		gun.texture.SetPixel(0, 1, Color.white);
-		gun.texture.SetPixel(1, 1, Color.white);
+		// Create a newtexture
+		Texture2D texture = new Texture2D(size, size, TextureFormat.ARGB32, false);
+
+		Color []bulletColors = new Color[size * size];
+		for(int i = 0; i < bulletColors.Length; i++)
+			bulletColors[i] = Color.white;
+
+		texture.SetPixels (bulletColors);
 
 		// Apply all SetPixel calls
-		gun.texture.Apply();
+		texture.Apply();
+
+		MisGun gun = new MisGun (damage, speed, frequency, texture);
 
 		return gun;
 	}

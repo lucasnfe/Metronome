@@ -11,10 +11,20 @@ public class MisGun {
 	private MisObjectPool _bullets;
 	private GameObject _bulletTemplate;
 
-	public MisGun() { 
 
-		_bulletTemplate = Resources.Load ("Particles/MisBullet") as GameObject;
-		_bullets = new MisObjectPool(_bulletTemplate);
+	public void InitBullet(GameObject obj) {
+
+		MisBullet bullet = obj.GetComponent<MisBullet> ();
+
+		bullet._moveSpeed = speed;
+		bullet.firedGun = this;
+		bullet.gameObject.layer = LayerMask.NameToLayer ("Ignore Raycast");
+
+		SpriteRenderer bulletSprite = obj.GetComponent<SpriteRenderer> ();
+		Rect rect = new Rect (Vector2.zero, new Vector2 (texture.width, texture.height));
+		bulletSprite.sprite = Sprite.Create(texture, rect, Vector2.zero);
+
+		bullet.gameObject.AddComponent<BoxCollider2D> ();
 	}
 
 	public MisGun(int damage, float speed, float frequency, Texture2D texture) {
@@ -23,6 +33,10 @@ public class MisGun {
 		this.speed     = speed;
 		this.frequency = frequency;
 		this.texture   = texture;
+
+		_bulletTemplate = Resources.Load ("Particles/MisBullet") as GameObject;
+
+		_bullets = new MisObjectPool(_bulletTemplate, InitBullet);
 	}
 
 	public MisBullet Fire(Vector3 startPos, float dir) {
@@ -30,16 +44,7 @@ public class MisGun {
 		GameObject obj = _bullets.GetFreeObject ();
 		MisBullet bullet = obj.GetComponent<MisBullet> ();
 
-		bullet._moveSpeed = speed;
-		bullet.firedGun = this;
-		bullet.gameObject.layer = LayerMask.NameToLayer ("Ignore Raycast");
 		bullet.transform.position = startPos;
-
-		SpriteRenderer bulletSprite = obj.GetComponent<SpriteRenderer> ();
-		Rect rect = new Rect (Vector2.zero, new Vector2 (2f, 2f));
-		bulletSprite.sprite = Sprite.Create(texture, rect, Vector2.zero);
-
-		bullet.gameObject.AddComponent<BoxCollider2D> ();
 		bullet.SetDirection (dir);
 
 		return bullet;

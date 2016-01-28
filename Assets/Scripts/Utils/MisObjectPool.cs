@@ -7,8 +7,10 @@ public class MisObjectPool {
 	private List<GameObject> _pool;
 	public int _polledAmount = 10;
 
+	public delegate void InitObject(GameObject obj);
+
 	// Use this for initialization
-	public MisObjectPool (GameObject objTemplate) {
+	public MisObjectPool (GameObject objTemplate, InitObject initMethod = null) {
 
 		_pool = new List<GameObject> ();
 
@@ -21,6 +23,8 @@ public class MisObjectPool {
 			obj.name = "PolledObj_" + i;
 			obj.transform.parent = poolObj.transform;
 			obj.SetActive (false);
+
+			if(initMethod != null) initMethod (obj);
 
 			_pool.Add (obj);
 		}
