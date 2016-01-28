@@ -6,8 +6,9 @@ public class MisMoveableObject : MonoBehaviour {
 
 	protected Vector2  _move;
 	protected Vector2  _velocity;
-	protected Vector2  _deltaPos;
+	protected Vector2  _acceleration;
 	protected Vector2  _ray;
+
 	// Components
 	protected BoxCollider2D _boundingBox;
 
@@ -18,7 +19,6 @@ public class MisMoveableObject : MonoBehaviour {
 	public int   _raysAmount;
 	public float _moveSpeed;
 	public float _jumpSpeed;
-	public float _friction;
 	public bool  _applyGravity;
 	public bool  _detectHorCollision;
 	public bool  _detectVerCollision;
@@ -29,7 +29,7 @@ public class MisMoveableObject : MonoBehaviour {
 	private Dictionary<Vector2, RaycastHit2D> _horicollisions;
 
 	// Methods to access properties
-	public Vector2 GetDeltaPos() {  return _deltaPos; }
+	public Vector2 GetDeltaPos() {  return _velocity; }
 
 	protected virtual void Start() {
 
@@ -51,19 +51,38 @@ public class MisMoveableObject : MonoBehaviour {
 		DetectCollision ();
 
 		// Detect collision and integrate velocity to position
-		transform.Translate(_deltaPos);
+		transform.Translate(_velocity);
 	}
 		
 	private void CalculateVelocity() {
 
-		_velocity.x = Mathf.Lerp(_velocity.x, _move.x * _moveSpeed * Time.deltaTime, _friction);
-		_velocity.x = Mathf.Clamp (_velocity.x, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
+		// Apply friction
+		float tv = Vector2.Dot (_velocity, Vector2.right) * MisConstants.FRICTION;
+		_velocity -= Vector2.right * tv;
 
+		// Apply horizontal force
+		ApplyForce (Vector2.right * _move.x * _moveSpeed * Time.deltaTime);
+
+		// Apply vertical force
+		ApplyForce (Vector2.up * _move.y * _jumpSpeed * Time.deltaTime);
+
+		// Apply gravity acceleration
 		if (_applyGravity)
-			_velocity.y += MisConstants.GRAVITY * Time.deltaTime;
-		
-		_velocity.y += _move.y * _jumpSpeed * Time.deltaTime;
+			ApplyForce (Vector2.up * MisConstants.GRAVITY * Time.deltaTime);
+
+		// Update velocity using currently acceleration
+		_velocity += _acceleration;
+
+		// Reset acceleration
+		_acceleration = Vector2.zero;
+
+		_velocity.x = Mathf.Clamp (_velocity.x, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
 		_velocity.y = Mathf.Clamp (_velocity.y, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
+	}
+
+	public void ApplyForce(Vector2 force) {
+
+		_acceleration += force;
 	}
 
 	private void DetectCollision() {
@@ -72,25 +91,18 @@ public class MisMoveableObject : MonoBehaviour {
 		Vector2 center = _boundingBox.offset;
 		Vector2 entityPosition = _boundingBox.bounds.center;
 
-		float deltaY = _velocity.y;
 		if (_detectVerCollision)
-			deltaY = DetectVerticalCollision (entityPosition, center, size);
+			DetectVerticalCollision (entityPosition, center, size);
 
-		float deltaX = _velocity.x;
-		if (_detectHorCollision && _velocity.x != 0f)
-			deltaX = DetectHorizontalCollision (entityPosition, center, size);
-
-		_deltaPos.x = deltaX;
-		_deltaPos.y = deltaY;
+		if (_detectHorCollision && Mathf.Abs(_velocity.x) > MisConstants.SAFETY_GAP)
+			DetectHorizontalCollision (entityPosition, center, size);
 	}
 
-	private float DetectHorizontalCollision(Vector2 entityPosition, Vector2 center, Vector2 size) {
-
-		float deltaX = _velocity.x;
-							
+	private void DetectHorizontalCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
+								
 		for (int rayPos = 0; rayPos < _raysAmount; rayPos++) {
 
-			_rayHit = xAxisRaycasts (entityPosition, center, size, rayPos, ref deltaX);
+			_rayHit = xAxisRaycasts (entityPosition, offset, size, rayPos);
 			if (_rayHit.collider)
 				break;
 		}
@@ -101,34 +113,31 @@ public class MisMoveableObject : MonoBehaviour {
 				DidExitCollision (hit);
 
 			_horicollisions.Clear ();
-		}
-			
-		return deltaX;
+		}			
 	}
 
-	private RaycastHit2D xAxisRaycasts(Vector2 entityPosition, Vector2 center, Vector2 size, int i, ref float deltaX) {
+	private RaycastHit2D xAxisRaycasts(Vector2 entityPosition, Vector2 offset, Vector2 size, int i) {
 
 		float dirX = transform.localScale.x;
+		float yRayOffset = (size.y / 2f - MisConstants.SAFETY_GAP) * (float)i;
 
-		_ray.x = entityPosition.x + (center.x + size.x / 2f) * dirX;
-		_ray.y = (entityPosition.y + _velocity.y + center.y - size.y / 2f) + size.y / 2f * i;
+		_ray.x = entityPosition.x + (offset.x + size.x / 2f) * dirX;
+		_ray.y = (entityPosition.y + offset.y - size.y / 2f + MisConstants.SAFETY_GAP) + yRayOffset;
 
-		RaycastHit2D hit = Physics2D.Raycast (_ray, Vector2.right * dirX, Mathf.Abs (deltaX));
+		RaycastHit2D hit = Physics2D.Raycast (_ray, Vector2.right * dirX, Mathf.Abs (_velocity.x));
 //		Debug.DrawRay (_ray, new Vector2 (dirX, 0));
 
 		if (hit.collider) {
 
 			if (!hit.collider.isTrigger) {
 
-				_velocity.x = 0f;
-
 				float distance = Mathf.Abs (_ray.x - hit.point.x);
 
 				if (distance >= MisConstants.PLAYER_SKIN)
 
-					deltaX = (distance - MisConstants.PLAYER_SKIN) * dirX;
+					_velocity.x = (distance - MisConstants.PLAYER_SKIN) * dirX;
 				else
-					deltaX = 0f;
+					_velocity.x = 0f;
 
 				if (!_horicollisions.ContainsKey(hit.transform.position)) {
 
@@ -147,7 +156,7 @@ public class MisMoveableObject : MonoBehaviour {
 		return hit;
 	}
 		
-	private float DetectVerticalCollision(Vector2 entityPosition, Vector2 center, Vector2 size) {
+	private float DetectVerticalCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
 
 		_isOnGround = false;
 
@@ -157,7 +166,7 @@ public class MisMoveableObject : MonoBehaviour {
 
 			for (int rayPos = _raysAmount - 1; rayPos >= 0; rayPos--) {
 
-				_rayHit = yAxisRaycasts (entityPosition, center, size, rayPos, ref deltaY);
+				_rayHit = yAxisRaycasts (entityPosition, offset, size, rayPos);
 				if (_rayHit.collider)
 					break;
 			}
@@ -166,7 +175,7 @@ public class MisMoveableObject : MonoBehaviour {
 			
 			for (int rayPos = 0; rayPos < _raysAmount; rayPos++) {
 
-				_rayHit = yAxisRaycasts (entityPosition, center, size, rayPos, ref deltaY);
+				_rayHit = yAxisRaycasts (entityPosition, offset, size, rayPos);
 				if (_rayHit.collider)
 					break;
 			}
@@ -183,15 +192,15 @@ public class MisMoveableObject : MonoBehaviour {
 		return deltaY;
 	}
 
-	private RaycastHit2D yAxisRaycasts(Vector2 entityPosition, Vector2 center, Vector2 size, int i, ref float deltaY) {
+	private RaycastHit2D yAxisRaycasts(Vector2 entityPosition, Vector2 offset, Vector2 size, int i) {
 
 		float dirX = -transform.localScale.x;
 		float dirY =  Mathf.Sign(_velocity.y);
 
-		_ray.x = (entityPosition.x + center.x * -dirX - size.x / 2f) + size.x / 2f * i;
-		_ray.y = entityPosition.y + center.y + size.y / 2f * dirY;
+		_ray.x = (entityPosition.x + offset.x * -dirX - size.x / 2f) + size.x / 2f * i;
+		_ray.y = entityPosition.y + offset.y + size.y / 2f * dirY;
 
-		RaycastHit2D hit = Physics2D.Raycast(_ray, Vector2.up * dirY, Mathf.Abs(deltaY));
+		RaycastHit2D hit = Physics2D.Raycast(_ray, Vector2.up * dirY, Mathf.Abs(_velocity.y));
 //		Debug.DrawRay(_ray,  Vector2.up * dirY);
 
 		if (hit.collider) {
@@ -199,15 +208,14 @@ public class MisMoveableObject : MonoBehaviour {
 			if (!hit.collider.isTrigger) {
 
 				_isOnGround = true;
-				_velocity.y = 0f;
 
 				float distance = Mathf.Abs (_ray.y - hit.point.y);
 
 				if (distance >= MisConstants.PLAYER_SKIN)
 
-					deltaY = distance * dirY + MisConstants.PLAYER_SKIN;
+					_velocity.y = distance * dirY + MisConstants.PLAYER_SKIN;
 				else
-					deltaY = 0f;
+					_velocity.y = 0f;
 
 				if (!_vertCollisions.ContainsKey(hit.transform.position)) {
 
@@ -232,7 +240,7 @@ public class MisMoveableObject : MonoBehaviour {
 
 	protected virtual void DidEnterCollision(RaycastHit2D hit) {
 
-		Debug.Log ("enter");
+//		Debug.Log ("enter");
 	}
 
 	protected virtual void DidStayCollision(RaycastHit2D hit) {
@@ -242,7 +250,7 @@ public class MisMoveableObject : MonoBehaviour {
 
 	protected virtual void DidExitCollision(RaycastHit2D hit) {
 
-		Debug.Log ("exit");
+//		Debug.Log ("exit");
 	}
 
 	protected void Flip(float dir) {

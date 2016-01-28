@@ -3,7 +3,7 @@ using System.Collections;
 
 public class MisHero : MisCharacter {
 
-	private float    _wallImpulse = 8f;
+	private float    _wallImpulse = 4f;
 	private float    _shootDelay;
 	private MisGun   _gun;
 	private Vector2  _wallCollisionNormal;

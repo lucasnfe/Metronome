@@ -5,7 +5,9 @@ public class MisConstants {
 
 	// PHYSICS SYSTEM CONSTANTS
 	public static readonly float GRAVITY              = Physics2D.gravity.y/20f;
+	public static readonly float FRICTION			  = 0.6f;
 	public static readonly float PLAYER_SKIN          = 0.0005f;
+	public static readonly float SAFETY_GAP			  = 0.005f;
 	public static readonly float MAX_SPEED     		  = 1f;
 
 	// TILE_SIZE = A power of two number -1f in order the avoid placement bugs

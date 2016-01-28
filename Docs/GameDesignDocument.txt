@@ -1,0 +1,40 @@
+== Mis Design Doc ==
+
+Procedurally generated rogue-like jump and shoot game.
+
+1. Introduction
+
+Mega Man X was a huge success when it came out in the 90s. This project aims
+to improve the replayability of this game using procedural content generation (PCG).
+The structure will be similar: intro level (teachs core mechanics and motivation),
+map with several bosses and final Level.
+
+2. Narrative
+
+X is a good vampire which is a slave working for a terrific boss. Once X makes
+three attempts to help the society in his job, his boss curses him and jails
+him in a second dimension world (souls world). X finds himself very weak,
+in this dark world and with an extreme reavenge feeling. He must figure out how
+to scape from this world in order to kill his boss and free the slaves.
+This world is guarded by 12 evil souls that you have to beat in order to free
+yourself.
+
+This world has an ancient vampire which never managed to scape but which have
+built items to help you.
+
+3. Mechanics
+
+Jump and Shoot, growing stronger. Destroy all the 'generators' is the only way to
+scape from the dark world. It never stops creating content for you, so you
+keep in a loop if you don't destroy it. Each generator controls one part of
+the generation algorithm, when you kill a generator, the world stops changing.
+
+- Maps
+
+Generated via Perlin Noise
+
+- Levels
+
+Generated via the speluncky algorithm. Each level has a boss and a new gun.
+
+- Guns
