@@ -8,8 +8,11 @@ public class MisWorldMap : MonoBehaviour {
 		MisGameWorld gw = MisGameWorld.Instance;
 	}
 
-	void OnMouseDown() 
-	{
-		MisSceneManager.Instance.LoadScene ("RandomLevel", true, LoadGameWorld);
+	void Update() {
+
+		if (Input.GetMouseButton (0)) {
+			
+			MisSceneManager.Instance.LoadScene ("RandomLevel", true, LoadGameWorld);
+		}
 	}
 }

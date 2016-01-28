@@ -1,76 +1,113 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MisMapGenerator : MonoBehaviour {
 
-	private SpriteRenderer _renderer;
+	enum TILES { deep_water, shallow_water, sand, grass, soft_montain, hard_montain}
+
+	public int      _width = 64;
+	public int      _height = 64;
+	public float    _mapScale = 0.25f;
+	public float    _timeScale = 0.15f;
+	public Sprite[] _tileSet;
+
+	// Contains the tile values
+	private int [,] _tileMap;
+
+	private GameObject[,] _tiles;
+
+	private readonly int tileSize = 32 - 1;
 
 	// Use this for initialization
 	void Start () {
 
-		if (GetComponent<SpriteRenderer> () == null)
-			gameObject.AddComponent<SpriteRenderer> ();
+		_tileMap = new int[_width, _height];
 
-		_renderer = gameObject.GetComponent<SpriteRenderer> ();
+		InitTerrain ();
 
-		// Generate black background
-		GenerateMapBackground ();
-
-		// Generate cities in random positions
-		GenerateCities (5);
+		GenerateTerrain (Time.time);
 	}
 
-	void GenerateMapBackground() {
+	void InitTerrain() {
 
-		// Create a new 2x2 texture ARGB32 (32 bit with alpha) and no mipmaps
-		Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
-		
-		// set the pixel values
-		texture.SetPixel(0, 0, Color.black);
-		texture.SetPixel(1, 0, Color.black);
-		texture.SetPixel(0, 1, Color.black);
-		texture.SetPixel(1, 1, Color.black);
-		
-		// Apply all SetPixel calls
-		texture.Apply();
-		
-		// connect texture to material of GameObject this script is attached to
-		_renderer.sprite = Sprite.Create(texture, new Rect(Vector2.zero, new Vector2(2f, 2f)), Vector2.zero);
+		_tiles = new GameObject[_width,_height];
 
-		transform.localScale = new Vector3(400f, 400f, 1f);
-		transform.position  -= new Vector3(2f * transform.localScale.x/200f,
-		                                   2f * transform.localScale.y/200f, 0f);
-	}
+		GameObject terrain = new GameObject ();
+		terrain.name = "Terrain";
 
-	void GenerateCities(int amount) {
+		for (int i = 0; i < _width; i++) {
 
-		for (int i = 0; i < amount; i++) {
+			for (int j = 0; j < _height; j++) {
 
-			GameObject city = new GameObject();
-			SpriteRenderer renderer = city.AddComponent<SpriteRenderer>();
-		
-			// Create a new 2x2 texture ARGB32 (32 bit with alpha) and no mipmaps
-			Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false);
-			
-			// set the pixel values
-			texture.SetPixel(0, 0, Color.white);
-			texture.SetPixel(1, 0, Color.white);
-			texture.SetPixel(0, 1, Color.white);
-			texture.SetPixel(1, 1, Color.white);
-
-			renderer.sprite = Sprite.Create(texture, new Rect(Vector2.zero, new Vector2(2f, 2f)), Vector2.zero);
-			city.transform.localScale = new Vector3(20f,20f, 1f);
-
-			city.AddComponent<BoxCollider2D>();
-			city.AddComponent<MisWorldMap>();
-
-			Vector2 offsetFromCenter = Random.insideUnitCircle * 3f;
-			city.transform.position += new Vector3(offsetFromCenter.x, offsetFromCenter.y, -2f);
+				_tiles [i, j] = CreateTile (i, j, terrain.transform);
+			}
 		}
 	}
 
-	// Update is called once per frame
-	void Update () {
-	
+	GameObject CreateTile(int i, int j, Transform terrain) {
+
+		float worldTileSize = (float)tileSize/ (float)MisConstants.PIXEL_UNIT;
+
+		// Creates a game object for the tile
+		GameObject gameObj = new GameObject ();
+		gameObj.name = "Tile_" + i + "_" + j;
+
+		// Set position and parent
+		gameObj.transform.parent = terrain;
+		gameObj.transform.position = new Vector2 (i, j) * worldTileSize;
+
+		// Add sprite renderer to support the texture
+		gameObj.AddComponent<SpriteRenderer> ();
+
+		return gameObj;
+	}
+
+	void GenerateTerrain(float time) {
+
+		PerlinNoise noiseGen = new PerlinNoise (0);
+
+		for (int i = 0; i < _width; i++) {
+
+			for (int j = 0; j < _height; j++) {
+
+				float x = (float)i / (float)_width;
+				float y = (float)j / (float)_height;
+
+				float noise = noiseGen.FractalNoise3D(x, y, time, 2, _mapScale + 0.01f, 1.75f);
+
+				_tileMap[i,j] = NoiseToTile (noise);
+
+				RenderTile (_tiles[i,j], _tileMap[i,j]);
+			}
+		}
+	}
+
+	void RenderTile(GameObject tile, int tileValue) {
+
+		SpriteRenderer tileRenderer = tile.GetComponent<SpriteRenderer> ();
+		tileRenderer.sprite = _tileSet[tileValue];
+	}
+
+	int NoiseToTile(float noiseValue) {
+
+		noiseValue = Mathf.Clamp (noiseValue, -2f, 2f);
+
+		if (noiseValue >= -2f  && noiseValue < 0f)
+			return (int)TILES.deep_water;
+
+		if (noiseValue >= 0f   && noiseValue < 0.25f)
+			return (int)TILES.shallow_water;
+
+		if (noiseValue >= 0.25f && noiseValue < 0.4f)
+			return (int)TILES.sand;
+
+		if (noiseValue >= 0.4f  && noiseValue < 0.75f)
+			return (int)TILES.grass;
+
+		if (noiseValue >= 0.75f && noiseValue < 0.95f)
+			return (int)TILES.soft_montain;
+
+		return (int)TILES.hard_montain;
 	}
 }

@@ -88,14 +88,14 @@ public class MisMoveableObject : MonoBehaviour {
 	private void DetectCollision() {
 		
 		Vector2 size = _boundingBox.bounds.size;
-		Vector2 center = _boundingBox.offset;
+		Vector2 offset = _boundingBox.offset;
 		Vector2 entityPosition = _boundingBox.bounds.center;
 
 		if (_detectVerCollision)
-			DetectVerticalCollision (entityPosition, center, size);
+			DetectVerticalCollision (entityPosition, offset, size);
 
 		if (_detectHorCollision && Mathf.Abs(_velocity.x) > MisConstants.SAFETY_GAP)
-			DetectHorizontalCollision (entityPosition, center, size);
+			DetectHorizontalCollision (entityPosition, offset, size);
 	}
 
 	private void DetectHorizontalCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
