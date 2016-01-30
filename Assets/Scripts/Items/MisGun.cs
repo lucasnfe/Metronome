@@ -11,7 +11,6 @@ public class MisGun {
 	private MisObjectPool _bullets;
 	private GameObject _bulletTemplate;
 
-
 	public void InitBullet(GameObject obj) {
 
 		MisBullet bullet = obj.GetComponent<MisBullet> ();
