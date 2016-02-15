@@ -1,36 +1,56 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class MisSceneManager : MisSingleton<MisSceneManager> {
 
+	public delegate void ActionBetweenScenes();
+
 	public AudioClip _backgroundMusic;
-	
+
 	private int _lastScene;
-	public int LastScene {
-		get { return _lastScene; }
-	}
-	
+	public int LastScene { get { return _lastScene; } }
+
+	private int _currentScene;
+	public int CurrentScene { get { return _currentScene; } }
+
 	void Start() {
-		
-//		_backgroundMusic = Resources.Load("title_theme") as AudioClip;
+
+		_backgroundMusic = Resources.Load("Audio/title_theme") as AudioClip;
 	}
-	
-	public void LoadScene(string sceneName, bool showLoadingScreen = true, System.Action actioneBetweenScenes = null) {
-		
-		MisSceneManager.Instance.StartCoroutine(SceneSwitchCoroutine(sceneName, showLoadingScreen, actioneBetweenScenes));
+
+	public void LoadScene (string sceneName, bool showLoadingScreen = true, ActionBetweenScenes actioneBetweenScenes = null) {
+
+		StartCoroutine(SceneSwitchCoroutine(sceneName, showLoadingScreen, actioneBetweenScenes));
 	}
-	
-	IEnumerator SceneSwitchCoroutine(string sceneName, bool showLoadingScreen, System.Action actioneBetweenScenes) {
-		_lastScene = Application.loadedLevel;
+
+	public void ReloadScene (bool showLoadingScreen = true, ActionBetweenScenes actioneBetweenScenes = null) {
+
+		string currentScene = SceneManager.GetActiveScene ().name;
+		StartCoroutine(SceneSwitchCoroutine(currentScene, showLoadingScreen, actioneBetweenScenes));
+	}
+
+	IEnumerator SceneSwitchCoroutine (string sceneName, bool showLoadingScreen, ActionBetweenScenes actioneBetweenScenes) {
+
+		_lastScene = SceneManager.GetActiveScene ().buildIndex;
+
 		if(showLoadingScreen) 
-			Application.LoadLevel("LoadingScene");
-		
-		yield return new WaitForSeconds(0.01f);
-		
+			SceneManager.LoadScene("LoadingScene");
+
+		yield return new WaitForSeconds(0.1f);
+
 		if (actioneBetweenScenes != null)
 			actioneBetweenScenes();
-		
-		Application.LoadLevel(sceneName);
+
+		SceneManager.LoadScene(sceneName);
+
+		if (sceneName.EndsWith("Menu")) {
+			if(!MisAudioController.Instance.IsPlayingMusic(_backgroundMusic))
+				MisAudioController.Instance.PlayMusic(_backgroundMusic);
+		}
+		else
+			MisAudioController.Instance.StopMusic();
+
+		_currentScene = SceneManager.GetActiveScene ().buildIndex;
 	}
 }
-

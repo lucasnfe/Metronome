@@ -3,18 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class MisGameWorld : MisSingleton<MisGameWorld> {
-		
-	private GameObject   	   _heroPrefab;
-	private GameObject       []_enemiesPrefab;
-
-	private GameObject         _level;
-
-	private MisCamera          _misCamera;
-	private MisLevelGenerator  _misLevelGenerator;
-	private MisAudioManager    _misAudioManager;
 
 	private MisHero 		   _misHero;
-	private Vector2 		   _nextSpawningPoint;
+	private MisCamera          _misCamera;
+	private MisLevelGenerator  _misLevelGenerator;
+
+	private GameObject   _level;
+	private GameObject   _heroPrefab;
+	private GameObject []_enemiesPrefab;
+
+	private Vector2      _nextSpawningPoint;
 
 	// Use this for initialization
 	void Start () {
@@ -29,16 +27,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		}
 
 		DontDestroyOnLoad (_misLevelGenerator.gameObject);
-
-		_misAudioManager = FindObjectOfType (typeof(MisAudioManager)) as MisAudioManager;
-		if (!_misAudioManager) {
-
-			GameObject temp = Instantiate(Resources.Load("MisAudioManager") as GameObject);
-			_misAudioManager = temp.GetComponent<MisAudioManager>();
-		}
-
-		DontDestroyOnLoad (_misAudioManager.gameObject);
-
+		
 		// Loading hero prefab
 		_heroPrefab = Resources.Load("Characters/MisPlayer") as GameObject;
 
@@ -97,8 +86,6 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		} else
 			_level.SetActive (true);
 		
-		_misAudioManager.PlayBacktrack ();
-
 		// Reset the hero
 		if(_misHero)
 			Destroy(_misHero.gameObject);
@@ -110,8 +97,8 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 		Destroy(_misHero.gameObject);
 
-		_nextSpawningPoint = heroSpawningPoint;
-		MisSceneManager.Instance.LoadScene (Application.loadedLevelName);
+		_nextSpawningPoint = heroSpawningPoint;	
+		MisSceneManager.Instance.ReloadScene ();
 	}
 
 	void SpawnHero(Vector2 spawningPoint) {

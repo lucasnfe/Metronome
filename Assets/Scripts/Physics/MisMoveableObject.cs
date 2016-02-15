@@ -17,6 +17,7 @@ public class MisMoveableObject : MonoBehaviour {
 
 	// Moveable object configurations
 	public int   _raysAmount;
+	public float _mass;
 	public float _moveSpeed;
 	public float _jumpSpeed;
 	public bool  _applyGravity;
@@ -82,6 +83,7 @@ public class MisMoveableObject : MonoBehaviour {
 
 	public void ApplyForce(Vector2 force) {
 
+		force /= _mass;
 		_acceleration += force;
 	}
 
