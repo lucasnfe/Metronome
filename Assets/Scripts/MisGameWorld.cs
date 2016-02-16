@@ -14,11 +14,29 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 	private Vector2      _nextSpawningPoint;
 
-	// Use this for initialization
-	void Start () {
+	void LoadTransictionScreen() {
 
-		DontDestroyOnLoad (gameObject);
-	
+		if (_level)
+			_level.SetActive (false);
+	}
+
+	void OnLevelWasLoaded(int level) {
+
+		if(level == 4) {
+
+			_misCamera = FindObjectOfType (typeof(MisCamera)) as MisCamera;
+			if (!_misCamera) {
+
+				Debug.LogError("Camera is not set!");
+				return;
+			}
+
+			SpawnHero (_nextSpawningPoint);
+		}
+	}
+
+	public void LoadPlayableLevel() {
+				
 		_misLevelGenerator = FindObjectOfType (typeof(MisLevelGenerator)) as MisLevelGenerator;
 		if (!_misLevelGenerator) {
 
@@ -26,71 +44,14 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 			_misLevelGenerator = temp.GetComponent<MisLevelGenerator>();
 		}
 
-		DontDestroyOnLoad (_misLevelGenerator.gameObject);
-		
+		_level = _misLevelGenerator.GenerateLevel ();
+		_level.transform.parent = transform;
+
 		// Loading hero prefab
 		_heroPrefab = Resources.Load("Characters/MisPlayer") as GameObject;
 
 		// Loading enemies prefabs
-		Object[] objects = Resources.LoadAll("Characters/Enemies");
-
-		_enemiesPrefab = new GameObject[objects.Length];
-		for (int i = 0; i < objects.Length; i++)
-			_enemiesPrefab[i] = (GameObject)objects[i];
-	}
-
-	void OnLevelWasLoaded(int level) {
-	
-		switch (level) {
-
-		case 0:
-			LoadTransictionScreen();
-			break;
-
-		case 1:
-			break;
-
-		case 2:
-			break;
-		
-		default:
-			LoadPlayableLevel();
-			break;
-		}
-	}
-
-	void LoadTransictionScreen() {
-
-		if (_level)
-			_level.SetActive (false);
-	}
-
-	void LoadPlayableLevel() {
-
-		if (_level)
-			_level.SetActive (true);
-		
-		_misCamera = FindObjectOfType (typeof(MisCamera)) as MisCamera;
-		if (!_misCamera) {
-			
-			Debug.LogError ("You must define a camera!");
-			return;
-		}
-		
-		if (!_level) {
-			
-			_level = _misLevelGenerator.GenerateLevel ();
-			_level.transform.parent = transform;
-
-			DontDestroyOnLoad (_level);
-		} else
-			_level.SetActive (true);
-		
-		// Reset the hero
-		if(_misHero)
-			Destroy(_misHero.gameObject);
-		
-		SpawnHero (_nextSpawningPoint);
+		_enemiesPrefab = Resources.LoadAll<GameObject>("Characters/Enemies");
 	}
 
 	public void ResetLevel(Vector2 heroSpawningPoint) {
@@ -106,6 +67,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		_misHero = SpawnCharacter (_heroPrefab, spawningPoint).GetComponent<MisHero>();
 
 		if (_misCamera) {
+			
 			_misCamera._player = _misHero;
 			_misCamera.Move(_misHero.transform.position);
 		}

@@ -4,7 +4,6 @@ using System.Collections;
 public class MisConstants {
 
 	// PHYSICS SYSTEM CONSTANTS
-	public static readonly float GRAVITY              = Physics2D.gravity.y/20f;
 	public static readonly float FRICTION			  = 0.6f;
 	public static readonly float PLAYER_SKIN          = 0.0005f;
 	public static readonly float SAFETY_GAP			  = 0.005f;
@@ -17,6 +16,8 @@ public class MisConstants {
 	// LEVEL GENERATOR CONSTANTS
 	public static readonly int   MAX_GAP_SIZE 		  = 2;
 	public static readonly float NON_ENEMIES_AREA 	  = 4f;
+	public static readonly int   LEVEL_MAX_WIDTH 	  = 12;
+	public static readonly int   LEVEL_MAX_HEIGHT 	  = 5;
 
 	// EVENT PLATFORM TAGS
 	public static readonly string TAG_KILLZONE 		  = "Killzone";

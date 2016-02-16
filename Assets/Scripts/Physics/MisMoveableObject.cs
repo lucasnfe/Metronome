@@ -62,14 +62,14 @@ public class MisMoveableObject : MonoBehaviour {
 		_velocity -= Vector2.right * tv;
 
 		// Apply horizontal force
-		ApplyForce (Vector2.right * _move.x * _moveSpeed * Time.deltaTime);
+		ApplyForce (Vector2.right * _move.x * _moveSpeed * Time.fixedDeltaTime);
 
 		// Apply vertical force
-		ApplyForce (Vector2.up * _move.y * _jumpSpeed * Time.deltaTime);
+		ApplyForce (Vector2.up * _move.y * _jumpSpeed * Time.fixedDeltaTime);
 
 		// Apply gravity acceleration
 		if (_applyGravity)
-			ApplyForce (Vector2.up * MisConstants.GRAVITY * Time.deltaTime);
+			ApplyForce (Vector2.up * Physics2D.gravity.y * Time.fixedDeltaTime);
 
 		// Update velocity using currently acceleration
 		_velocity += _acceleration;
@@ -83,7 +83,9 @@ public class MisMoveableObject : MonoBehaviour {
 
 	public void ApplyForce(Vector2 force) {
 
-		force /= _mass;
+		if(_mass != 0f)
+			force /= _mass;
+		
 		_acceleration += force;
 	}
 

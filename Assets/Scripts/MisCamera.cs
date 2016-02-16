@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent (typeof (BoxCollider2D))]
 public class MisCamera : MonoBehaviour {
 
 	public MisHero _player;
@@ -9,17 +10,17 @@ public class MisCamera : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		float originalSize = Camera.main.orthographicSize;
-	
-		Camera.main.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
-
+//		float originalSize = Camera.main.orthographicSize;
+//	
+//		Camera.main.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
+//
 		_cameraWindow = GetComponent<BoxCollider2D> ();
-
-		Vector2 adaptedSize = Vector2.zero;
-		adaptedSize.x = (Camera.main.orthographicSize * _cameraWindow.size.x) / originalSize;
-		adaptedSize.y = (Camera.main.orthographicSize * _cameraWindow.size.y) / originalSize;
-
-		_cameraWindow.size = adaptedSize;
+//
+//		Vector2 adaptedSize = Vector2.zero;
+//		adaptedSize.x = (Camera.main.orthographicSize * _cameraWindow.size.x) / originalSize;
+//		adaptedSize.y = (Camera.main.orthographicSize * _cameraWindow.size.y) / originalSize;
+//
+//		_cameraWindow.size = adaptedSize;
 	}
 
 	public void Move(Vector2 dest) {

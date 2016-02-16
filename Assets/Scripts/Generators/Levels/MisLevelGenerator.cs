@@ -80,4 +80,19 @@ public class MisLevelGenerator : MonoBehaviour {
 
 		return tile;
 	}
+
+	protected bool DestroyCollidableTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
+
+		float xKey = float.Parse(position.x.ToString("0.00"));
+		float yKey = float.Parse(position.y.ToString("0.00"));
+		Vector2 dictKey = new Vector2 (xKey, yKey);  
+
+		if (_collidebleTiles.ContainsKey (dictKey)) {
+
+			Destroy (_collidebleTiles [dictKey].gameObject);
+			return true;
+		}
+
+		return false;
+	}
 }

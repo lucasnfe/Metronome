@@ -21,7 +21,7 @@ public static class MisGunGenerator {
 
 		Color []bulletColors = new Color[size * size];
 		for(int i = 0; i < bulletColors.Length; i++)
-			bulletColors[i] = Color.white;
+			bulletColors[i] = Color.grey;
 
 		texture.SetPixels (bulletColors);
 
