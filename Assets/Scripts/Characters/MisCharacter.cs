@@ -16,7 +16,9 @@ public class MisCharacter : MisMoveableObject {
 		_animator = GetComponent<Animator>();
 	}
 
-	void Update() {
+	protected virtual void Update() {
+
+		_move = Vector2.zero;
 
 		if (!_isDead)
 			UpdateState();

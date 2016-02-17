@@ -4,7 +4,8 @@ using System.Collections;
 public class MisConstants {
 
 	// PHYSICS SYSTEM CONSTANTS
-	public static readonly float FRICTION			  = 0.6f;
+	public static readonly float WALL_FRICTION	      = 0.15f;
+	public static readonly float AIR_FRICTION	      = 0.4f;
 	public static readonly float PLAYER_SKIN          = 0.0005f;
 	public static readonly float SAFETY_GAP			  = 0.005f;
 	public static readonly float MAX_SPEED     		  = 1f;

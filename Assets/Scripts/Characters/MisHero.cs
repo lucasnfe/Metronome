@@ -18,7 +18,9 @@ public class MisHero : MisCharacter {
 	}
 
 	// Update is called once per frame
-	void Update() {
+	protected override void Update() {
+
+		base.Update ();
 
 		if (!_isDead)
 			KeyboardControl ();
@@ -27,16 +29,16 @@ public class MisHero : MisCharacter {
 	private void KeyboardControl() {
 
 		// Vertical movement controls
-		_move.y = 0f;
-
 		if (Input.GetKeyDown (KeyCode.UpArrow)) {
 
 			if (_isOnGround) {
-				
+
+				// Ground jumping
 				_move.y = 1f;
-			}
+			} 
 			else if (_wallCollisionNormal != Vector2.zero) {
-				
+
+				// Wall jumping
 				_move.y = 1f;
 				_velocity.y = 0f;
 			}
@@ -45,9 +47,10 @@ public class MisHero : MisCharacter {
 		// Horizontal movement controls
 		_move.x = Input.GetAxisRaw("Horizontal");
 
-		if (!_isOnGround && _move.y == 1f) {
+		if (!_isOnGround && _move.y > 0f) {
 
-			if( _wallCollisionNormal != Vector2.zero)
+			// Wall jumping
+			if(_wallCollisionNormal != Vector2.zero)
 				_move.x += _wallImpulse * _wallCollisionNormal.x;
 		}
 
@@ -56,7 +59,7 @@ public class MisHero : MisCharacter {
 		// Attacking controls
 		_isAttacking = false;
 
-		if (Input.GetKey (KeyCode.Space)) {
+		if (Input.GetKeyDown (KeyCode.Space)) {
 
 			if (_shootDelay >= _gun.frequency) {
 
@@ -65,7 +68,7 @@ public class MisHero : MisCharacter {
 				_isAttacking = true;
 			}
 
-			_shootDelay += Time.deltaTime * 10f;
+			_shootDelay += Time.deltaTime;
 		}
 
 		if (Input.GetKeyUp (KeyCode.Space))
@@ -75,6 +78,9 @@ public class MisHero : MisCharacter {
 	void Shoot() {
 
 		float dir = transform.localScale.x;
+
+		if(_wallCollisionNormal != Vector2.zero)
+			dir = _wallCollisionNormal.x;
 
 		Vector3 shootPos = transform.position;
 		shootPos.x += (_boundingBox.size.x * 0.5f + 0.05f) * dir;
