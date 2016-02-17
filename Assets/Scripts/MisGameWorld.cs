@@ -20,38 +20,36 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 			_level.SetActive (false);
 	}
 
-	void OnLevelWasLoaded(int level) {
-
-		if(level == 4) {
-
-			_misCamera = FindObjectOfType (typeof(MisCamera)) as MisCamera;
-			if (!_misCamera) {
-
-				Debug.LogError("Camera is not set!");
-				return;
-			}
-
-			SpawnHero (_nextSpawningPoint);
-		}
-	}
-
 	public void LoadPlayableLevel() {
 				
 		_misLevelGenerator = FindObjectOfType (typeof(MisLevelGenerator)) as MisLevelGenerator;
-		if (!_misLevelGenerator) {
-
-			GameObject temp = Instantiate(Resources.Load("Generators/MisLevelGenerator") as GameObject);
-			_misLevelGenerator = temp.GetComponent<MisLevelGenerator>();
-		}
+		if (!_misLevelGenerator)
+			_misLevelGenerator = Instantiate(Resources.Load<MisLevelGenerator>("Generators/MisLevelGenerator"));
 
 		_level = _misLevelGenerator.GenerateLevel ();
 		_level.transform.parent = transform;
+
+		_level.SetActive (false);
 
 		// Loading hero prefab
 		_heroPrefab = Resources.Load("Characters/MisPlayer") as GameObject;
 
 		// Loading enemies prefabs
 		_enemiesPrefab = Resources.LoadAll<GameObject>("Characters/Enemies");
+	}
+
+	public void SetupLevel() {
+		
+		_misCamera = GameObject.Find("MisCamera").GetComponent<MisCamera>();
+		if (_misCamera == null) {
+
+			Debug.LogError ("You need to create a camera.");
+			return;
+		}
+
+		SpawnHero (_nextSpawningPoint);
+
+		_level.SetActive (true);
 	}
 
 	public void ResetLevel(Vector2 heroSpawningPoint) {

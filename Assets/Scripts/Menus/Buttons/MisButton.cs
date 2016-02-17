@@ -6,10 +6,14 @@ public class MisButton : MonoBehaviour {
 	// Use this for initialization
 	public void LoadScene (string sceneName) {
 
-		MisSceneManager.Instance.LoadScene (sceneName, true, LoadAction);
+		MisSceneManager.Instance.LoadScene (sceneName, true, ActionBeween, ActionAfter);
 	}
 
-	protected virtual void LoadAction () {
+	protected virtual void ActionBeween () {
 		
+	}
+
+	protected virtual void ActionAfter () {
+
 	}
 }

@@ -129,7 +129,7 @@ public class MisMoveableObject : MonoBehaviour {
 		_ray.y = (entityPosition.y + offset.y - size.y / 2f + MisConstants.SAFETY_GAP) + yRayOffset;
 
 		RaycastHit2D hit = Physics2D.Raycast (_ray, Vector2.right * dirX, Mathf.Abs (_velocity.x));
-//		Debug.DrawRay (_ray, new Vector2 (dirX, 0));
+		Debug.DrawRay (_ray, new Vector2 (dirX, 0));
 
 		if (hit.collider) {
 
@@ -205,7 +205,7 @@ public class MisMoveableObject : MonoBehaviour {
 		_ray.y = entityPosition.y + offset.y + size.y / 2f * dirY;
 
 		RaycastHit2D hit = Physics2D.Raycast(_ray, Vector2.up * dirY, Mathf.Abs(_velocity.y));
-//		Debug.DrawRay(_ray,  Vector2.up * dirY);
+		Debug.DrawRay(_ray,  Vector2.up * dirY);
 
 		if (hit.collider) {
 

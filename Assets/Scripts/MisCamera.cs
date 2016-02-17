@@ -2,25 +2,32 @@
 using System.Collections;
 
 [RequireComponent (typeof (BoxCollider2D))]
+[RequireComponent (typeof (Camera))]
 public class MisCamera : MonoBehaviour {
 
 	public MisHero _player;
+
 	private BoxCollider2D _cameraWindow;
+	private Camera _camera;
 
 	// Use this for initialization
 	void Start () {
 
-//		float originalSize = Camera.main.orthographicSize;
-//	
-//		Camera.main.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
-//
+		_camera = GetComponent<Camera> ();
+
 		_cameraWindow = GetComponent<BoxCollider2D> ();
-//
-//		Vector2 adaptedSize = Vector2.zero;
-//		adaptedSize.x = (Camera.main.orthographicSize * _cameraWindow.size.x) / originalSize;
-//		adaptedSize.y = (Camera.main.orthographicSize * _cameraWindow.size.y) / originalSize;
-//
-//		_cameraWindow.size = adaptedSize;
+		_cameraWindow.isTrigger = true;
+
+		_camera.gameObject.layer = LayerMask.NameToLayer ("Ignore Raycast");
+
+		float originalSize = _camera.orthographicSize;
+		_camera.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
+
+		Vector2 adaptedSize = Vector2.zero;
+		adaptedSize.x = (_camera.orthographicSize * _cameraWindow.size.x) / originalSize;
+		adaptedSize.y = (_camera.orthographicSize * _cameraWindow.size.y) / originalSize;
+
+		_cameraWindow.size = adaptedSize;
 	}
 
 	public void Move(Vector2 dest) {

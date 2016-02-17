@@ -8,7 +8,6 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 	public int roomHeight;
 
 	private Vector2 _nextRoom;
-	private Vector2 _lastRoomDir;
 
 	struct Room {
 
@@ -42,10 +41,10 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 				_nextRoom  = new  Vector2 (_levelData[i + 1].x, _levelData[i + 1].y);
 
 			// Build the walls to close the room
-			BuildRoomWalls (startPos, tileSize, _nextRoom - pos);
+			BuildRoomWalls (startPos, tileSize);
 
-			startPos.x += _lastRoomDir.x * roomWidth * tileSize;
-			startPos.y += _lastRoomDir.y * roomHeight * tileSize;
+			startPos.x += (_nextRoom.x - pos.x) * roomWidth * tileSize;
+			startPos.y += (_nextRoom.y - pos.y) * roomHeight * tileSize;
 		}
 	}
 
@@ -83,16 +82,30 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 		return roomGrid;
 	}
 
-	void BuildRoomWalls(Vector2 startPos, float tileSize, Vector2 nextDir) {
+	void BuildRoomWalls(Vector2 startPos, float tileSize) {
 
 		Sprite sprite = _surface [Random.Range (0, _surface.Length)];
 
 		for (int i = -roomWidth * 2; i < roomWidth * 2; i++) {
 
 			for (int j = -roomHeight * 2; j < roomHeight * 2; j++) {
-
+				
 				Vector2 pos1 = startPos + new Vector2 (i, j) * tileSize;
-				BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
+
+				if(i >= 0 && i < roomWidth && j == -1)
+					BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
+
+				else if(i >= 0 && i < roomWidth && j == roomHeight)
+					BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
+
+				else if(j >= 0 && j < roomHeight && i == -1)
+					BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
+
+				else if(j >= 0 && j < roomHeight && i == roomWidth)
+					BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
+				
+				else 
+					BuildTile (pos1, _level.transform, sprite, _colliderOffset);
 			}
 		}
 
@@ -101,11 +114,8 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 			for (int j = 0; j < roomHeight; j++) {
 
 				Vector2 pos1 = startPos + new Vector2 (i, j) * tileSize;
-				DestroyCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
+				DestroyTile (pos1, _level.transform, sprite, _colliderOffset);
 			}
 		}
-
-		_lastRoomDir = nextDir;
-
 	}
 }

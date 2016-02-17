@@ -38,20 +38,20 @@ public class MisLevelGenerator : MonoBehaviour {
 
 	}
 
-	protected GameObject BuildCollidableTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
+	protected GameObject BuildTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
 
 		GameObject tile = null;
-		SpriteRenderer renderer = null;
-		BoxCollider2D collider = null;
 
 		float xKey = float.Parse(position.x.ToString("0.00"));
 		float yKey = float.Parse(position.y.ToString("0.00"));
 		Vector2 dictKey = new Vector2 (xKey, yKey);  
 
-		if (!_collidebleTiles.ContainsKey (dictKey))
+		if (!_collidebleTiles.ContainsKey (dictKey)) {
 
 			tile = new GameObject ();
-		else 
+			tile.AddComponent<SpriteRenderer> ();
+		} 
+		else
 			tile = _collidebleTiles [dictKey];
 
 		tile.name = "Surface";
@@ -60,28 +60,27 @@ public class MisLevelGenerator : MonoBehaviour {
 		tile.transform.parent = parent;
 		tile.transform.position = position;	
 
-		if (!_collidebleTiles.ContainsKey (dictKey))
-
-			renderer = tile.AddComponent<SpriteRenderer> ();
-		else
-			renderer = tile.GetComponent<SpriteRenderer> ();
-
-		renderer.sprite = sprite;
-
-		if (!_collidebleTiles.ContainsKey (dictKey))
-
-			collider = tile.AddComponent<BoxCollider2D> ();
-		else
-			collider = tile.GetComponent<BoxCollider2D> ();
-
-		collider.offset = colliderOffset;
+		tile.GetComponent<SpriteRenderer> ().sprite = sprite;
 
 		_collidebleTiles [dictKey] = tile;
 
 		return tile;
 	}
 
-	protected bool DestroyCollidableTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
+	protected GameObject BuildCollidableTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
+
+		GameObject tile = BuildTile(position, parent, sprite, colliderOffset);
+
+		BoxCollider2D bCollider = tile.GetComponent<BoxCollider2D> ();
+		if(bCollider == null)
+			bCollider = tile.AddComponent<BoxCollider2D> ();
+	
+		bCollider.offset = colliderOffset;
+
+		return tile;
+	}
+
+	protected bool DestroyTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
 
 		float xKey = float.Parse(position.x.ToString("0.00"));
 		float yKey = float.Parse(position.y.ToString("0.00"));
