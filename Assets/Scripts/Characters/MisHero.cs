@@ -79,7 +79,7 @@ public class MisHero : MisCharacter {
 
 		float dir = transform.localScale.x;
 
-		if(_wallCollisionNormal != Vector2.zero)
+		if(!_isOnGround && _wallCollisionNormal != Vector2.zero)
 			dir = _wallCollisionNormal.x;
 
 		Vector3 shootPos = transform.position;

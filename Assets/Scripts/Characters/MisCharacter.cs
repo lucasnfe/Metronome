@@ -29,9 +29,7 @@ public class MisCharacter : MisMoveableObject {
 		if (_animator) {
 
 			_animator.SetBool ("isRunning", IsRunning () && !_isAttacking);
-		
 			_animator.SetBool ("isJumping", (IsJumping () || IsFalling ()) && !_isAttacking);
-		
 			_animator.SetBool ("isShooting", _isAttacking);
 		}
 	}

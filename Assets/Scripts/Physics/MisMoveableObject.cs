@@ -70,6 +70,10 @@ public class MisMoveableObject : MonoBehaviour {
 		// Update velocity using currently acceleration
 		_velocity += _acceleration;
 
+		// Apply air friction
+		float gv = Vector2.Dot (_velocity, Vector2.right) * MisConstants.AIR_FRICTION;
+		_velocity -= Vector2.right * gv;
+
 		// Reset acceleration
 		_acceleration = Vector2.zero;
 
@@ -98,15 +102,14 @@ public class MisMoveableObject : MonoBehaviour {
 
 			if (DetectHorizontalCollision (entityPosition, offset, size)) {
 
-				// Apply wall friction
-				float tv = Vector2.Dot (_velocity, Vector2.up) * MisConstants.WALL_FRICTION;
-				_velocity -= Vector2.up * tv;
+				if (!_isOnGround) {
+					
+					// Apply wall friction					
+					float tv = Vector2.Dot (_velocity, Vector2.up) * MisConstants.WALL_FRICTION;
+					_velocity -= Vector2.up * tv;
+				}
 			}
 		}
-
-		// Apply air friction
-		float gv = Vector2.Dot (_velocity, Vector2.right) * MisConstants.AIR_FRICTION;
-		_velocity -= Vector2.right * gv;
 	}
 
 	private bool DetectHorizontalCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
@@ -173,8 +176,6 @@ public class MisMoveableObject : MonoBehaviour {
 	private bool DetectVerticalCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
 
 		_isOnGround = false;
-
-		float deltaY = _velocity.y;
 
 		if (transform.localScale.x == 1f) {
 

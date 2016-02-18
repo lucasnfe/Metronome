@@ -14,7 +14,7 @@ public static class MisGunGenerator {
 		// Set a random speed
 		float speed = Random.Range(10f, 20f)/frequency;
 
-		int size = Random.Range (2, 6);
+		int size = Random.Range (4, 8);
 
 		// Create a newtexture
 		Texture2D texture = new Texture2D(size, size, TextureFormat.ARGB32, false);

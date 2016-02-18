@@ -36,7 +36,7 @@ public class MisCamera : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void LateUpdate () {
+	void Update () {
 
 		if (!_player)
 			return;
