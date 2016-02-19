@@ -51,8 +51,15 @@ public class MisLevelGenerator : MonoBehaviour {
 			tile = new GameObject ();
 			tile.AddComponent<SpriteRenderer> ();
 		} 
-		else
+		else if(_collidebleTiles.ContainsKey (dictKey) && _collidebleTiles[dictKey].gameObject == null) {
+
+			tile = new GameObject ();
+			tile.AddComponent<SpriteRenderer> ();
+		}
+		else {
+			
 			tile = _collidebleTiles [dictKey];
+		}
 
 		tile.name = "Surface";
 		tile.tag  = MisConstants.TAG_WALL;

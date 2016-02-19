@@ -4,8 +4,12 @@ using System.Collections.Generic;
 
 public class MisGameWorld : MisSingleton<MisGameWorld> {
 
-	private MisHero 		   _misHero;
-	private MisCamera          _misCamera;
+	private MisHero _misHero;
+	public  MisHero GameHero { get { return _misHero; } }
+
+	private MisCamera _misCamera;
+	public  MisCamera GameCamera { get { return _misCamera; } }
+
 	private MisLevelGenerator  _misLevelGenerator;
 
 	private GameObject   _level;
@@ -22,9 +26,8 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 	public void LoadPlayableLevel() {
 				
-		_misLevelGenerator = FindObjectOfType (typeof(MisLevelGenerator)) as MisLevelGenerator;
-		if (!_misLevelGenerator)
-			_misLevelGenerator = Instantiate(Resources.Load<MisLevelGenerator>("Generators/MisLevelGenerator"));
+		_misLevelGenerator = Instantiate (Resources.Load<MisLevelGenerator> ("Generators/MisLevelGenerator"));
+		DontDestroyOnLoad (_misLevelGenerator);
 
 		_level = _misLevelGenerator.GenerateLevel ();
 		_level.transform.parent = transform;
@@ -40,12 +43,22 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 	public void SetupLevel() {
 		
-		_misCamera = GameObject.Find("MisCamera").GetComponent<MisCamera>();
+		_misCamera = FindObjectOfType (typeof(MisCamera)) as MisCamera;
 		if (_misCamera == null) {
 
 			Debug.LogError ("You need to create a camera.");
 			return;
 		}
+
+		BeatCounter beatCounter = FindObjectOfType (typeof(BeatCounter)) as BeatCounter;
+		if (beatCounter == null) {
+
+			Debug.LogError ("You need to create a beat counter.");
+			return;
+		}
+
+		beatCounter.observers = new GameObject[1];
+		beatCounter.observers[0] = _misLevelGenerator.gameObject;
 
 		SpawnHero (_nextSpawningPoint);
 
