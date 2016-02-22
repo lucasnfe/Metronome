@@ -4,11 +4,7 @@ using System.Collections.Generic;
 
 public class MisLevelGenerator : MonoBehaviour {
 
-	public Sprite  []_surface;
-	public Sprite  []_intertal;
-	public Sprite  []_external;
-	public Sprite  []_platforms;
-	public Sprite  []_enemies;
+	public GameObject []_platforms;
 
 	public Vector2 _startPosition;
 	public Vector2 _endPosition;
@@ -38,7 +34,7 @@ public class MisLevelGenerator : MonoBehaviour {
 
 	}
 
-	protected GameObject BuildTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
+	public GameObject BuildTile(Vector2 position, Transform parent, GameObject platform, Vector2 colliderOffset) {
 
 		GameObject tile = null;
 
@@ -48,46 +44,29 @@ public class MisLevelGenerator : MonoBehaviour {
 
 		if (!_collidebleTiles.ContainsKey (dictKey)) {
 
-			tile = new GameObject ();
-			tile.AddComponent<SpriteRenderer> ();
+			tile = (GameObject) Instantiate (platform);
 		} 
 		else if(_collidebleTiles.ContainsKey (dictKey) && _collidebleTiles[dictKey].gameObject == null) {
 
-			tile = new GameObject ();
-			tile.AddComponent<SpriteRenderer> ();
+			tile = (GameObject) Instantiate (platform);
 		}
 		else {
 			
 			tile = _collidebleTiles [dictKey];
 		}
 
-		tile.name = "Surface";
+		tile.name = "Platform";
 		tile.tag  = MisConstants.TAG_WALL;
 		tile.isStatic = true;
 		tile.transform.parent = parent;
 		tile.transform.position = position;	
 
-		tile.GetComponent<SpriteRenderer> ().sprite = sprite;
-
 		_collidebleTiles [dictKey] = tile;
 
 		return tile;
 	}
-
-	protected GameObject BuildCollidableTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
-
-		GameObject tile = BuildTile(position, parent, sprite, colliderOffset);
-
-		BoxCollider2D bCollider = tile.GetComponent<BoxCollider2D> ();
-		if(bCollider == null)
-			bCollider = tile.AddComponent<BoxCollider2D> ();
-	
-		bCollider.offset = colliderOffset;
-
-		return tile;
-	}
-
-	protected bool DestroyTile(Vector2 position, Transform parent, Sprite sprite, Vector2 colliderOffset) {
+		
+	public bool DestroyTile(Vector2 position) {
 
 		float xKey = float.Parse(position.x.ToString("0.00"));
 		float yKey = float.Parse(position.y.ToString("0.00"));

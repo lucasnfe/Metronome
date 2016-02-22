@@ -28,4 +28,10 @@ public class MisConstants {
 
 		ALIEN
 	}
+
+	public enum PLATFORMS {
+
+		STATIC,
+		BREAKABLE,
+	}
 }

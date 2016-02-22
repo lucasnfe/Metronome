@@ -5,7 +5,7 @@ using SynchronizerData;
 
 public class MetronomeLevelGenerator : MisLevelGenerator {
 
-	public int _roomWidth = 5;
+	public int _roomWidth  = 5;
 	public int _roomHeight = 5;
 	public int _roomAmount = 1;
 
@@ -115,39 +115,25 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 	void BuildRoomWalls(Vector2 startPos, float tileSize) {
 
-		Sprite sprite = _surface [Random.Range (0, _surface.Length)];
+		GameObject staticPlat = _platforms [(int)MisConstants.PLATFORMS.STATIC];
 
 		for (int i = -_roomWidth * 2; i < _roomWidth * 2; i++) {
 
 			for (int j = -_roomHeight * 2; j < _roomHeight * 2; j++) {
 				
 				Vector2 pos1 = startPos + new Vector2 (i, j) * tileSize;
-
-				if(i >= 0 && i < _roomWidth && j == -1)
-					BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
-
-				else if(i >= 0 && i < _roomWidth && j == _roomHeight)
-					BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
-
-				else if(j >= 0 && j < _roomHeight && i == -1)
-					BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
-
-				else if(j >= 0 && j < _roomHeight && i == _roomWidth)
-					BuildCollidableTile (pos1, _level.transform, sprite, _colliderOffset);
-				
-				else 
-					BuildTile (pos1, _level.transform, sprite, _colliderOffset);
+				BuildTile (pos1, _level.transform, staticPlat, _colliderOffset);
 			}
 		}
 
 		for (int i = 0; i < _roomWidth; i++) {
-
+			
 			for (int j = 0; j < _roomHeight; j++) {
 
-				Vector2 pos1 = startPos + new Vector2 (i, j) * tileSize;
-				DestroyTile (pos1, _level.transform, sprite, _colliderOffset);
+				DestroyTile (startPos + new Vector2 (i, j) * tileSize);
 			}
 		}
+
 	}
 
 	public void PlacePlatform() {
@@ -182,10 +168,9 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 		Vector2 tilePos = PickRandomEmptyTileInRoom(roomIndex);
 		_levelData.rooms[roomIndex].platforms [(int)tilePos.x, (int)tilePos.y] = 1;
 
-		Sprite sprite = _surface [Random.Range (0, _surface.Length)];
-
+		GameObject platform = _platforms [(int)MisConstants.PLATFORMS.BREAKABLE];
 		Vector2 pos1 = roomPos + new Vector2 (tilePos.x, tilePos.y) * tileSize;
-		BuildCollidableTile (pos1, _level.transform, sprite, Vector2.zero);
+		BuildTile (pos1, _level.transform, platform, Vector2.zero);
 	}
 
 	private Vector2 CalcHeroRelativePos(Vector2 heroGlobalPos) {

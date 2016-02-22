@@ -5,14 +5,14 @@ public static class MisGunGenerator {
 
 	public static MisGun GenerateGun() {
 
-		// Set a random damage
-		int damage = Random.Range (1, 10);
-
 		// Set a random frequency
-		float frequency = Random.Range(0.5f, 2f);
+		float frequency = Random.Range(1f, 2f);
 
 		// Set a random speed
-		float speed = Random.Range(10f, 20f)/frequency;
+		float speed = 20f/frequency;
+
+		// Set a random damage
+		int damage = (int)(10f/frequency);
 
 		int size = Random.Range (4, 8);
 

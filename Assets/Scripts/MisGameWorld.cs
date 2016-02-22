@@ -11,6 +11,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 	public  MisCamera GameCamera { get { return _misCamera; } }
 
 	private MisLevelGenerator  _misLevelGenerator;
+	public  MisLevelGenerator  GameGenerator { get { return _misLevelGenerator; } }
 
 	private GameObject   _level;
 	private GameObject   _heroPrefab;

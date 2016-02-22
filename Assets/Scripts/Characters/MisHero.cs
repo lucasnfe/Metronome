@@ -88,36 +88,45 @@ public class MisHero : MisCharacter {
 		_gun.Fire (shootPos, dir);
 	}
 
-	protected override void DidEnterEventCollision(RaycastHit2D hit) {
+	protected override void DidEnterEventCollision(Collider2D hit, Vector2 normal) {
 
-		base.DidEnterEventCollision (hit);
+		if (hit == null)
+			return;
+		
+		base.DidEnterEventCollision (hit, normal);
 
-		if (hit.collider.gameObject.tag == MisConstants.TAG_KILLZONE) {
+		if (hit.gameObject.tag == MisConstants.TAG_KILLZONE) {
 
-			MisKillZone killZone = hit.collider.gameObject.GetComponent<MisKillZone> ();
+			MisKillZone killZone = hit.transform.gameObject.GetComponent<MisKillZone> ();
 			MisGameWorld.Instance.ResetLevel(killZone.respawnPosition);
 		}
 	}
 
-	protected override void DidEnterCollision(RaycastHit2D hit) {
+	protected override void DidEnterCollision(Collider2D hit, Vector2 normal) {
 
-		base.DidEnterCollision (hit);
+		if (hit == null)
+			return;
+		
+		base.DidEnterCollision (hit, normal);
 
-		if (hit.collider.tag == "Wall") {
+		if (hit.tag == "Wall") {
 			
-			if (hit.normal == Vector2.right || hit.normal == -Vector2.right) 
-				_wallCollisionNormal = hit.normal;
+			if (normal == Vector2.right || normal == -Vector2.right) 
+				_wallCollisionNormal = normal;
 			
 		}
 	}
 
-	protected override void DidExitCollision(RaycastHit2D hit) {
+	protected override void DidExitCollision(Collider2D hit, Vector2 normal) {
 	
-		base.DidExitCollision (hit);
+		if (hit == null)
+			return;
 
-		if (hit.collider.tag == "Wall") {
+		base.DidExitCollision (hit, normal);
 
-			if (hit.normal == Vector2.right || hit.normal == -Vector2.right) 
+		if (hit.tag == "Wall") {
+
+			if (normal == Vector2.right || normal == -Vector2.right) 
 				_wallCollisionNormal = Vector2.zero;
 
 		}

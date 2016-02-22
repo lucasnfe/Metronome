@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent (typeof (SpriteRenderer))]
 public class MisBullet : MisMoveableObject {
 	
 	SpriteRenderer _renderer;
@@ -11,7 +12,6 @@ public class MisBullet : MisMoveableObject {
 	protected override void Start () {
 
 		base.Start ();
-
 		_renderer = GetComponent<SpriteRenderer> ();
 	}
 
@@ -23,7 +23,13 @@ public class MisBullet : MisMoveableObject {
 			firedGun.DestroyBullet(this);
 	}
 
-	protected override void DidEnterCollision(RaycastHit2D hit) {
+	protected override void DidEnterCollision(Collider2D hit, Vector2 normal) {
+
+		base.DidEnterEventCollision (hit, normal);
+
+		MisDestroyableObject target = hit.transform.GetComponent<MisDestroyableObject> ();
+		if (target != null)
+ 			target.DealDamage (firedGun.damage);
 
 		firedGun.DestroyBullet(this);
 	}

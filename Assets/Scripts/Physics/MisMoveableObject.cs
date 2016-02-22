@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[RequireComponent (typeof (BoxCollider2D))]
 public class MisMoveableObject : MonoBehaviour {
 
 	protected Vector2  _move;
@@ -124,7 +125,7 @@ public class MisMoveableObject : MonoBehaviour {
 		if (_rayHit.collider == null) {
 
 			foreach (RaycastHit2D hit in _horicollisions.Values)
-				DidExitCollision (hit);
+				DidExitCollision (hit.collider, hit.normal);
 
 			_horicollisions.Clear ();
 			return false;
@@ -159,15 +160,16 @@ public class MisMoveableObject : MonoBehaviour {
 				if (!_horicollisions.ContainsKey(hit.transform.position)) {
 
 					_horicollisions [hit.transform.position] = hit;
-					DidEnterCollision (hit);
+					DidEnterCollision (hit.collider, hit.normal);
 				} 
 				else
-					DidStayCollision (_horicollisions [hit.transform.position]);
+					DidStayCollision (_horicollisions [hit.transform.position].collider,
+						_horicollisions [hit.transform.position].normal);
 
 				return hit;
 			}
 
-			DidEnterEventCollision (hit);
+			DidEnterEventCollision (hit.collider, hit.normal);
 		}
 
 		return hit;
@@ -199,7 +201,7 @@ public class MisMoveableObject : MonoBehaviour {
 		if (_rayHit.collider == null) {
 
 			foreach (RaycastHit2D hit in _vertCollisions.Values)
-				DidExitCollision (hit);
+				DidExitCollision (hit.collider, hit.normal);
 
 			_vertCollisions.Clear ();
 			return false;
@@ -236,37 +238,35 @@ public class MisMoveableObject : MonoBehaviour {
 				if (!_vertCollisions.ContainsKey(hit.transform.position)) {
 
 					_vertCollisions [hit.transform.position] = hit;
-					DidEnterCollision (hit);
+					DidEnterCollision (hit.collider, hit.normal);
 				} 
 				else
-					DidStayCollision (_vertCollisions [hit.transform.position]);
+					DidStayCollision (_vertCollisions [hit.transform.position].collider, 
+						_vertCollisions [hit.transform.position].normal);
 
 				return hit;
 			}
 
-			DidEnterEventCollision (hit);
+			DidEnterEventCollision (hit.collider, hit.normal);
 		}
 
 		return hit;
 	}
 		
-	protected virtual void DidEnterEventCollision(RaycastHit2D hit) {
+	protected virtual void DidEnterEventCollision(Collider2D hit, Vector2 normal) {
 
 	}
 
-	protected virtual void DidEnterCollision(RaycastHit2D hit) {
-
-//		Debug.Log ("enter");
-	}
-
-	protected virtual void DidStayCollision(RaycastHit2D hit) {
-
+	protected virtual void DidEnterCollision(Collider2D hit, Vector2 normal) {
 
 	}
 
-	protected virtual void DidExitCollision(RaycastHit2D hit) {
+	protected virtual void DidStayCollision(Collider2D hit, Vector2 normal) {
 
-//		Debug.Log ("exit");
+	}
+
+	protected virtual void DidExitCollision(Collider2D hit, Vector2 normal) {
+
 	}
 
 	protected void Flip(float dir) {
