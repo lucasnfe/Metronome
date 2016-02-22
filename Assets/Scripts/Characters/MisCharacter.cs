@@ -3,10 +3,11 @@ using System.Collections;
 
 public class MisCharacter : MisMoveableObject {
 
-	protected Animator _animator;
+	protected Animator       _animator;
+	protected SpriteRenderer _renderer;
 
-	protected bool     _isDead;
-	protected bool     _isAttacking;
+	protected bool  _isDead;
+	protected bool  _isAttacking;
 	
 	// Use this for initialization
 	protected override void Start () {
@@ -14,6 +15,7 @@ public class MisCharacter : MisMoveableObject {
 		base.Start ();
 
 		_animator = GetComponent<Animator>();
+		_renderer = GetComponent<SpriteRenderer>();
 	}
 
 	protected virtual void Update() {

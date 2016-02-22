@@ -6,28 +6,33 @@ using UnityEngine.UI;
 public class MisTimer : MonoBehaviour {
 
 	public int startTime;
+
+	private float  _timeRemaining;
 	private Text _timeText;
 
 	// Use this for initialization
 	void Start () {
 	
-		_timeText = GetComponent<Text> ();
-		_timeText.text = FormatTime (startTime);
+		_timeRemaining = startTime;
 
-		InvokeRepeating ("DecreaseSecond", 0f, 1f);
+		_timeText = GetComponent<Text> ();
+		_timeText.text = FormatTime (_timeRemaining);
 	}
 
-	string FormatTime(int time) {
+	void FixedUpdate() {
 
-		int minutes = time / 60; 
-		int seconds = time % 60;
+		if (_timeRemaining > 0) {
+			
+			_timeRemaining -= Time.deltaTime * 2f;
+			_timeText.text = FormatTime (_timeRemaining);
+		}
+	}
+
+	string FormatTime(float time) {
+
+		int minutes = (int)time / 60; 
+		int seconds = (int)time % 60;
 
 		return string.Format ("{0:00}:{1:00}", minutes, seconds);
-	}
-
-	void DecreaseSecond() {
-
-		startTime--;
-		_timeText.text = FormatTime (startTime);
 	}
 }

@@ -1,4 +1,4 @@
-== Mis Design Doc ==
+== Metronome Design Doc ==
 
 Procedurally generated rogue-like jump and shoot game.
 

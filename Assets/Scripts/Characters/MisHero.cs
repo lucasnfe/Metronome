@@ -28,6 +28,11 @@ public class MisHero : MisCharacter {
 
 	private void KeyboardControl() {
 
+		_renderer.flipX = false;
+
+		if (!_isOnGround && _wallCollisionNormal != Vector2.zero)
+			_renderer.flipX = true;
+
 		// Vertical movement controls
 		if (Input.GetKeyDown (KeyCode.UpArrow)) {
 
@@ -53,9 +58,7 @@ public class MisHero : MisCharacter {
 			if(_wallCollisionNormal != Vector2.zero)
 				_move.x += _wallImpulse * _wallCollisionNormal.x;
 		}
-
-		Flip (_move.x);
-	
+			
 		// Attacking controls
 		_isAttacking = false;
 
@@ -79,7 +82,7 @@ public class MisHero : MisCharacter {
 
 		float dir = transform.localScale.x;
 
-		if(!_isOnGround && _wallCollisionNormal != Vector2.zero)
+		if (!_isOnGround && _wallCollisionNormal != Vector2.zero)
 			dir = _wallCollisionNormal.x;
 
 		Vector3 shootPos = transform.position;

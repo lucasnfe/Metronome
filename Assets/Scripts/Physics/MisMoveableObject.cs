@@ -80,6 +80,8 @@ public class MisMoveableObject : MonoBehaviour {
 
 		_velocity.x = Mathf.Clamp (_velocity.x, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
 		_velocity.y = Mathf.Clamp (_velocity.y, -MisConstants.MAX_SPEED, MisConstants.MAX_SPEED);
+
+		Flip (_velocity.x);
 	}
 
 	public void ApplyForce(Vector2 force) {
