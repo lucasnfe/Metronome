@@ -41,12 +41,16 @@ public class MisGun {
 	public MisBullet Fire(Vector3 startPos, float dir) {
 
 		GameObject obj = _bullets.GetFreeObject ();
-		MisBullet bullet = obj.GetComponent<MisBullet> ();
+		if (obj) {
+			
+			MisBullet bullet = obj.GetComponent<MisBullet> ();
 
-		bullet.transform.position = startPos;
-		bullet.SetDirection (dir);
+			bullet.transform.position = startPos;
+			bullet.SetDirection (dir);
+			return bullet;
+		}
 
-		return bullet;
+		return null;
 	}
 
 	public void DestroyBullet(MisBullet bullet) {

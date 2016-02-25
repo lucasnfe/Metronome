@@ -4,13 +4,15 @@ using System.Collections.Generic;
 
 public class MisLevelGenerator : MonoBehaviour {
 
-	public GameObject []_platforms;
+	public GameObject[] _platforms;
+	public AudioClip [] _soundEffects;
 
 	public Vector2 _startPosition;
 	public Vector2 _endPosition;
 	public Vector2 _colliderOffset;
 
 	protected GameObject _level;
+	protected AudioSource _audioSource;
 
 	protected Dictionary <Vector2, GameObject> _collidebleTiles;
 
@@ -18,6 +20,7 @@ public class MisLevelGenerator : MonoBehaviour {
 	protected virtual void Awake () {
 
 		_collidebleTiles = new Dictionary <Vector2, GameObject> ();
+		_audioSource = GetComponent<AudioSource> ();
 	}
 
 	public GameObject GenerateLevel() {
@@ -34,7 +37,7 @@ public class MisLevelGenerator : MonoBehaviour {
 
 	}
 
-	public GameObject BuildTile(Vector2 position, Transform parent, GameObject platform, Vector2 colliderOffset) {
+	public GameObject BuildTile(Vector2 position, Transform parent, GameObject platform, Vector2 colliderOffset, bool playSFX = false) {
 
 		GameObject tile = null;
 
@@ -63,6 +66,9 @@ public class MisLevelGenerator : MonoBehaviour {
 
 		_collidebleTiles [dictKey] = tile;
 
+		if (playSFX)
+			PlaySFX (LEVEL_SFX.PLAT_CREATE);
+
 		return tile;
 	}
 		
@@ -79,5 +85,10 @@ public class MisLevelGenerator : MonoBehaviour {
 		}
 
 		return false;
+	}
+
+	public void PlaySFX(LEVEL_SFX clip) {
+
+		_audioSource.PlayOneShot (_soundEffects [(int)clip]);
 	}
 }

@@ -41,7 +41,7 @@ public class MisCamera : MonoBehaviour {
 		if (!_player)
 			return;
 
-		Vector2 heroVel = _player.GetDeltaPos ();
+		Vector2 heroVel = _player.Velocity;
 	
 		// Camera horizontal velocity
 		float cameraVelX = 0f;

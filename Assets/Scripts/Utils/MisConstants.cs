@@ -1,6 +1,35 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum ENEMIES {
+
+	ALIEN
+}
+
+public enum PLATFORMS {
+
+	STATIC,
+	BREAKABLE,
+}
+
+public enum CHARACTER_SFX {
+
+	RUN,
+	JUMP,
+	SHOOT,
+}
+
+public enum LEVEL_SFX {
+
+	PLAT_CREATE
+}
+
+public enum DESTROY_SFX {
+
+	HIT,
+	DESTROY
+}
+
 public class MisConstants {
 
 	// PHYSICS SYSTEM CONSTANTS
@@ -23,15 +52,4 @@ public class MisConstants {
 	// EVENT PLATFORM TAGS
 	public static readonly string TAG_KILLZONE 		  = "Killzone";
 	public static readonly string TAG_WALL 		      = "Wall";
-
-	public enum ENEMIES {
-
-		ALIEN
-	}
-
-	public enum PLATFORMS {
-
-		STATIC,
-		BREAKABLE,
-	}
 }

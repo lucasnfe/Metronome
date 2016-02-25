@@ -5,9 +5,12 @@ using System.Collections.Generic;
 [RequireComponent (typeof (BoxCollider2D))]
 public class MisMoveableObject : MonoBehaviour {
 
-	protected Vector2  _move;
 	protected Vector2  _velocity;
+	public Vector2 Velocity { get { return _velocity; } }
+
 	protected Vector2  _acceleration;
+	public Vector2 Acceleration { get { return _acceleration; } }
+
 	protected Vector2  _ray;
 
 	// Components
@@ -29,9 +32,6 @@ public class MisMoveableObject : MonoBehaviour {
 
 	private Dictionary<Vector2, RaycastHit2D> _vertCollisions;
 	private Dictionary<Vector2, RaycastHit2D> _horicollisions;
-
-	// Methods to access properties
-	public Vector2 GetDeltaPos() {  return _velocity; }
 
 	protected virtual void Start() {
 
@@ -57,12 +57,6 @@ public class MisMoveableObject : MonoBehaviour {
 	}
 		
 	private void CalculateVelocity() {
-
-		// Apply horizontal force
-		ApplyForce (Vector2.right * _move.x * _moveSpeed * Time.fixedDeltaTime);
-
-		// Apply vertical force
-		ApplyForce (Vector2.up * _move.y * _jumpSpeed * Time.fixedDeltaTime);
 
 		// Apply gravity acceleration
 		if (_applyGravity)
@@ -105,7 +99,7 @@ public class MisMoveableObject : MonoBehaviour {
 
 			if (DetectHorizontalCollision (entityPosition, offset, size)) {
 
-				if (!_isOnGround) {
+				if (!_isOnGround && _velocity.y < 0f) {
 					
 					// Apply wall friction					
 					float tv = Vector2.Dot (_velocity, Vector2.up) * MisConstants.WALL_FRICTION;
@@ -179,8 +173,6 @@ public class MisMoveableObject : MonoBehaviour {
 		
 	private bool DetectVerticalCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
 
-		_isOnGround = false;
-
 		if (transform.localScale.x == 1f) {
 
 			for (int rayPos = _raysAmount - 1; rayPos >= 0; rayPos--) {
@@ -227,8 +219,6 @@ public class MisMoveableObject : MonoBehaviour {
 
 			if (!hit.collider.isTrigger) {
 
-				_isOnGround = true;
-
 				float distance = Mathf.Abs (_ray.y - hit.point.y);
 
 				if (distance >= MisConstants.PLAYER_SKIN)
@@ -261,6 +251,11 @@ public class MisMoveableObject : MonoBehaviour {
 
 	protected virtual void DidEnterCollision(Collider2D hit, Vector2 normal) {
 
+		if (hit == null)
+			return;
+
+		if (normal == Vector2.up)
+			_isOnGround = true;
 	}
 
 	protected virtual void DidStayCollision(Collider2D hit, Vector2 normal) {
@@ -269,6 +264,11 @@ public class MisMoveableObject : MonoBehaviour {
 
 	protected virtual void DidExitCollision(Collider2D hit, Vector2 normal) {
 
+		if (hit == null)
+			return;
+
+		if (normal == Vector2.up)
+			_isOnGround = false;
 	}
 
 	protected void Flip(float dir) {
@@ -281,22 +281,22 @@ public class MisMoveableObject : MonoBehaviour {
 		}
 	}
 
-	protected bool IsFlipped() {
+	public bool IsFlipped() {
 
 		return transform.localScale.x == -1f;
 	}
 
-	protected bool IsJumping() {
+	public bool IsJumping() {
 
 		return _velocity.y > 0f;
 	}
 
-	protected bool IsFalling() {
+	public bool IsFalling() {
 
 		return _velocity.y < 0f && !_isOnGround;
 	}
 
-	protected bool IsRunning() {
+	public bool IsRunning() {
 
 		return _velocity.x != 0f;
 	}

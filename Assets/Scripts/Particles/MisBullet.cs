@@ -5,6 +5,7 @@ using System.Collections;
 public class MisBullet : MisMoveableObject {
 	
 	SpriteRenderer _renderer;
+	float _dir = 0f;
 
 	public MisGun firedGun { get ; set; }
 
@@ -15,9 +16,9 @@ public class MisBullet : MisMoveableObject {
 		_renderer = GetComponent<SpriteRenderer> ();
 	}
 
-	protected override void FixedUpdate () {
+	void Update () {
 
-		base.FixedUpdate ();
+		ApplyForce (Vector2.right * _moveSpeed * _dir * Time.fixedDeltaTime);
 
 		if (!_renderer.isVisible)
 			firedGun.DestroyBullet(this);
@@ -27,15 +28,21 @@ public class MisBullet : MisMoveableObject {
 
 		base.DidEnterEventCollision (hit, normal);
 
-		MisDestroyableObject target = hit.transform.GetComponent<MisDestroyableObject> ();
+   		MisDestroyableObject target = hit.transform.GetComponent<MisDestroyableObject> ();
 		if (target != null)
  			target.DealDamage (firedGun.damage);
 
 		firedGun.DestroyBullet(this);
 	}
 
+	protected override void DidStayCollision(Collider2D hit, Vector2 normal) {
+
+		base.DidStayCollision (hit, normal);
+		firedGun.DestroyBullet(this);
+	}
+
 	public void SetDirection(float dir) {
 
-		_move.x = Mathf.Sign (dir);
+		_dir = Mathf.Sign (dir);
 	}
 }

@@ -3,10 +3,15 @@ using System.Collections;
 
 public class MisHero : MisCharacter {
 
-	private float    _wallImpulse = 4f;
 	private float    _shootDelay;
+	private float    _jumpTimer;
+	private float    _stepTimer;
+
 	private MisGun   _gun;
 	private Vector2  _wallCollisionNormal;
+
+	public  float    _longJumpTime;
+	public  float    _stepDelay;
 
 	protected override void Start() {
 
@@ -15,6 +20,7 @@ public class MisHero : MisCharacter {
 		// Generate a random gun.
 		_gun = MisGunGenerator.GenerateGun();
 		_shootDelay = _gun.frequency;
+		_stepTimer  = _stepDelay;
 	}
 
 	// Update is called once per frame
@@ -28,38 +34,78 @@ public class MisHero : MisCharacter {
 
 	private void KeyboardControl() {
 
-		_renderer.flipX = false;
+		_renderer.flipX = IsGliding();
 
-		if (!_isOnGround && _wallCollisionNormal != Vector2.zero)
-			_renderer.flipX = true;
+		VerticalMovement();
+			
+		HorizontalMovement();
 
-		// Vertical movement controls
-		if (Input.GetKeyDown (KeyCode.UpArrow)) {
+		AttackingBehaviour();
+	}
 
-			if (_isOnGround) {
+	void VerticalMovement() {
 
-				// Ground jumping
-				_move.y = 1f;
-			} 
-			else if (_wallCollisionNormal != Vector2.zero) {
+		bool canJump = _isOnGround;
+		if (_wallCollisionNormal != Vector2.zero)
+			canJump = true;
 
-				// Wall jumping
-				_move.y = 1f;
+		if (canJump && Input.GetKeyDown(KeyCode.UpArrow)){
+
+			_jumpTimer = _longJumpTime;
+
+			ApplyForce (Vector2.up * _jumpSpeed * Time.fixedDeltaTime);
+
+			if (!_isOnGround && _wallCollisionNormal != Vector2.zero) {
+
 				_velocity.y = 0f;
+				ApplyForce (Vector2.right * _moveSpeed * _wallCollisionNormal.x * 5f * Time.fixedDeltaTime);
+			}
+
+			PlaySFX (CHARACTER_SFX.JUMP);
+		}
+
+		if (_jumpTimer > 0f) {
+			
+			if (Input.GetKeyUp(KeyCode.UpArrow)) {
+
+				_jumpTimer = 0f;
+
+			} 
+			else if(Input.GetKey(KeyCode.UpArrow)) {
+				
+				ApplyForce (Vector2.up * _jumpSpeed * _jumpTimer * Time.fixedDeltaTime);
+
+				_jumpTimer -= Time.fixedDeltaTime;
+				if (_jumpTimer <= 0f) {
+					_jumpTimer = 0f;
+				}
 			}
 		}
-			
-		// Horizontal movement controls
-		_move.x = Input.GetAxisRaw("Horizontal");
+	}
 
-		if (!_isOnGround && _move.y > 0f) {
+	void HorizontalMovement() {
 
-			// Wall jumping
-			if(_wallCollisionNormal != Vector2.zero)
-				_move.x += _wallImpulse * _wallCollisionNormal.x;
+		float dir = Input.GetAxisRaw("Horizontal");
+		ApplyForce (Vector2.right * _moveSpeed * dir * Time.fixedDeltaTime);
+
+		if (_isOnGround) {
+
+			if (Mathf.Abs (dir) > 0f) {
+
+				_stepTimer += Time.deltaTime;
+				if (_stepTimer >= _stepDelay) {
+
+					PlaySFX (CHARACTER_SFX.RUN);
+					_stepTimer = 0f;
+				}
+			} 
+			else
+				_stepTimer = _stepDelay;
 		}
-			
-		// Attacking controls
+	}
+
+	void AttackingBehaviour() {
+
 		_isAttacking = false;
 
 		if (Input.GetKeyDown (KeyCode.Space)) {
@@ -82,11 +128,13 @@ public class MisHero : MisCharacter {
 
 		float dir = transform.localScale.x;
 
-		if (!_isOnGround && _wallCollisionNormal != Vector2.zero)
+		if (IsGliding())
 			dir = _wallCollisionNormal.x;
 
 		Vector3 shootPos = transform.position;
 		shootPos.x += (_boundingBox.size.x * 0.5f + 0.05f) * dir;
+
+		PlaySFX (CHARACTER_SFX.SHOOT);
 
 		_gun.Fire (shootPos, dir);
 	}
@@ -116,7 +164,20 @@ public class MisHero : MisCharacter {
 			
 			if (normal == Vector2.right || normal == -Vector2.right) 
 				_wallCollisionNormal = normal;
-			
+		}
+	}
+
+	protected override void DidStayCollision(Collider2D hit, Vector2 normal) {
+
+		if (hit == null)
+			return;
+
+		base.DidStayCollision (hit, normal);
+
+		if (hit.tag == "Wall") {
+
+			if (normal == Vector2.right || normal == -Vector2.right) 
+				_wallCollisionNormal = normal;
 		}
 	}
 
@@ -128,10 +189,13 @@ public class MisHero : MisCharacter {
 		base.DidExitCollision (hit, normal);
 
 		if (hit.tag == "Wall") {
-
-			if (normal == Vector2.right || normal == -Vector2.right) 
 				_wallCollisionNormal = Vector2.zero;
 
 		}
+	}
+
+	protected bool IsGliding() {
+
+		return !_isOnGround && _wallCollisionNormal != Vector2.zero && _velocity.y < 0f;
 	}
 }

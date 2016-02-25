@@ -115,7 +115,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 	void BuildRoomWalls(Vector2 startPos, float tileSize) {
 
-		GameObject staticPlat = _platforms [(int)MisConstants.PLATFORMS.STATIC];
+		GameObject staticPlat = _platforms [(int)PLATFORMS.STATIC];
 
 		for (int i = -_roomWidth * 2; i < _roomWidth * 2; i++) {
 
@@ -168,9 +168,9 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 		Vector2 tilePos = PickRandomEmptyTileInRoom(roomIndex);
 		_levelData.rooms[roomIndex].platforms [(int)tilePos.x, (int)tilePos.y] = 1;
 
-		GameObject platform = _platforms [(int)MisConstants.PLATFORMS.BREAKABLE];
+		GameObject platform = _platforms [(int)PLATFORMS.BREAKABLE];
 		Vector2 pos1 = roomPos + new Vector2 (tilePos.x, tilePos.y) * tileSize;
-		BuildTile (pos1, _level.transform, platform, Vector2.zero);
+		BuildTile (pos1, _level.transform, platform, Vector2.zero, true);
 	}
 
 	private Vector2 CalcHeroRelativePos(Vector2 heroGlobalPos) {
