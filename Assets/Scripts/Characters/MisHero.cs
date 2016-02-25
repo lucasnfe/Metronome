@@ -196,6 +196,7 @@ public class MisHero : MisCharacter {
 
 	protected bool IsGliding() {
 
-		return !_isOnGround && _wallCollisionNormal != Vector2.zero && _velocity.y < 0f;
+		bool isPressingRun = Input.GetKey (KeyCode.RightArrow) || Input.GetKey (KeyCode.LeftArrow);
+		return !_isOnGround && _wallCollisionNormal != Vector2.zero && _velocity.y < 0f && isPressingRun;
 	}
 }
