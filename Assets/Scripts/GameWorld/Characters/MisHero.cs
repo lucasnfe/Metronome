@@ -18,7 +18,7 @@ public class MisHero : MisCharacter {
 		base.Start ();
 
 		// Generate a random gun.
-		_gun = MisGunGenerator.GenerateGun();
+		_gun = MisGunGenerator.GenerateGun(gameObject);
 		_shootDelay = _gun.frequency;
 		_stepTimer  = _stepDelay;
 	}
@@ -61,7 +61,7 @@ public class MisHero : MisCharacter {
 				ApplyForce (Vector2.right * _moveSpeed * _wallCollisionNormal.x * 5f * Time.fixedDeltaTime);
 			}
 
-			PlaySFX (CHARACTER_SFX.JUMP);
+			PlaySFX ((int)CHARACTER_SFX.JUMP);
 		}
 
 		if (_jumpTimer > 0f) {
@@ -95,7 +95,7 @@ public class MisHero : MisCharacter {
 				_stepTimer += Time.deltaTime;
 				if (_stepTimer >= _stepDelay) {
 
-					PlaySFX (CHARACTER_SFX.RUN);
+					PlaySFX ((int)CHARACTER_SFX.RUN);
 					_stepTimer = 0f;
 				}
 			} 
@@ -134,7 +134,7 @@ public class MisHero : MisCharacter {
 		Vector3 shootPos = transform.position;
 		shootPos.x += (_boundingBox.size.x * 0.5f + 0.05f) * dir;
 
-		PlaySFX (CHARACTER_SFX.SHOOT);
+		PlaySFX ((int)CHARACTER_SFX.SHOOT);
 
 		_gun.Fire (shootPos, dir);
 	}
@@ -183,8 +183,10 @@ public class MisHero : MisCharacter {
 
 	protected override void DidExitCollision(Collider2D hit, Vector2 normal) {
 	
-		if (hit == null)
+		if (hit == null) {
+			_wallCollisionNormal = Vector2.zero;
 			return;
+		}
 
 		base.DidExitCollision (hit, normal);
 

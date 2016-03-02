@@ -5,10 +5,10 @@ using System.Collections;
 [RequireComponent (typeof (Camera))]
 public class MisCamera : MonoBehaviour {
 
-	public MisHero _player;
-
+	private Vector3       _move;
+	private MisHero       _player;
+	private Camera        _camera;
 	private BoxCollider2D _cameraWindow;
-	private Camera _camera;
 
 	// Use this for initialization
 	void Start () {
@@ -36,41 +36,40 @@ public class MisCamera : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void LateUpdate () {
+	void Update () {
+
+		_player = MisGameWorld.Instance.GameHero;
 
 		if (!_player)
 			return;
 
 		Vector2 heroVel = _player.Velocity;
+		_move = Vector2.zero;
 	
 		// Camera horizontal velocity
-		float cameraVelX = 0f;
-
 		if (heroVel.x > 0f) {
 
 			if (_player.transform.position.x - _cameraWindow.bounds.min.x >= _cameraWindow.bounds.size.x)
-				cameraVelX = heroVel.x;
+				_move.x = heroVel.x;
 		}
 		else {
 
 			if (_cameraWindow.bounds.max.x -_player.transform.position.x >= _cameraWindow.bounds.size.x)
-				cameraVelX = heroVel.x;
+				_move.x = heroVel.x;
 		}
 
-		// Camera vetical velocity
-		float cameraVelY = 0f;
-			
+		// Camera vetical velocity			
 		if (heroVel.y > 0f) {
 
 			if (_player.transform.position.y - _cameraWindow.bounds.min.y >= _cameraWindow.bounds.size.y)
-				cameraVelY = heroVel.y;
+					_move.y = heroVel.y;
 		}
 		else {
 
 			if (_cameraWindow.bounds.max.y -_player.transform.position.y >= _cameraWindow.bounds.size.y)
-				cameraVelY = heroVel.y;
+					_move.y = heroVel.y;
 		}
-
-		transform.position += new Vector3(cameraVelX, cameraVelY, 0f);
+			
+		transform.position += _move;
 	}
 }

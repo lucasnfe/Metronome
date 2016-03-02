@@ -10,8 +10,8 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 	private MisCamera _misCamera;
 	public  MisCamera GameCamera { get { return _misCamera; } }
 
-	private MisLevelGenerator  _misLevelGenerator;
-	public  MisLevelGenerator  GameGenerator { get { return _misLevelGenerator; } }
+	private MetronomeLevelGenerator  _misLevelGenerator;
+	public  MetronomeLevelGenerator  GameGenerator { get { return _misLevelGenerator; } }
 
 	private GameObject   _level;
 	private GameObject   _heroPrefab;
@@ -27,13 +27,11 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 	public void LoadPlayableLevel() {
 				
-		_misLevelGenerator = Instantiate (Resources.Load<MisLevelGenerator> ("Generators/MisLevelGenerator"));
+		_misLevelGenerator = Instantiate (Resources.Load<MetronomeLevelGenerator> ("Generators/MisLevelGenerator"));
 		DontDestroyOnLoad (_misLevelGenerator);
 
 		_level = _misLevelGenerator.GenerateLevel ();
 		_level.transform.parent = transform;
-
-		_level.SetActive (false);
 
 		// Loading hero prefab
 		_heroPrefab = Resources.Load("Characters/MisPlayer") as GameObject;
@@ -51,19 +49,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 			return;
 		}
 
-		BeatCounter beatCounter = FindObjectOfType (typeof(BeatCounter)) as BeatCounter;
-		if (beatCounter == null) {
-
-			Debug.LogError ("You need to create a beat counter.");
-			return;
-		}
-
-		beatCounter.observers = new GameObject[1];
-		beatCounter.observers[0] = _misLevelGenerator.gameObject;
-
 		SpawnHero (_nextSpawningPoint);
-
-		_level.SetActive (true);
 	}
 
 	public void ResetLevel(Vector2 heroSpawningPoint) {
@@ -78,11 +64,8 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 		_misHero = SpawnCharacter (_heroPrefab, spawningPoint).GetComponent<MisHero>();
 
-		if (_misCamera) {
-			
-			_misCamera._player = _misHero;
+		if (_misCamera) 			
 			_misCamera.Move(_misHero.transform.position);
-		}
 	}
 
 	public void SpawnEnemy(int enemyType, Vector2 spawningPoint) {

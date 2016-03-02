@@ -3,7 +3,7 @@ using System.Collections;
 
 public enum ENEMIES {
 
-	ALIEN
+	BAT
 }
 
 public enum PLATFORMS {
@@ -19,15 +19,11 @@ public enum CHARACTER_SFX {
 	SHOOT,
 }
 
-public enum LEVEL_SFX {
-
-	PLAT_CREATE
-}
-
 public enum DESTROY_SFX {
 
 	HIT,
-	DESTROY
+	DESTROY,
+	CREATE
 }
 
 public class MisConstants {
@@ -47,7 +43,7 @@ public class MisConstants {
 	public static readonly int   MAX_GAP_SIZE 		  = 2;
 	public static readonly float NON_ENEMIES_AREA 	  = 4f;
 	public static readonly int   LEVEL_MAX_WIDTH 	  = 12;
-	public static readonly int   LEVEL_MAX_HEIGHT 	  = 5;
+	public static readonly int   LEVEL_MAX_HEIGHT 	  = 8;
 
 	// EVENT PLATFORM TAGS
 	public static readonly string TAG_KILLZONE 		  = "Killzone";

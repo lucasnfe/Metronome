@@ -5,14 +5,11 @@ using System.Collections.Generic;
 public class MisLevelGenerator : MonoBehaviour {
 
 	public GameObject[] _platforms;
-	public AudioClip [] _soundEffects;
+	public GameObject[] _enemies;
 
 	public Vector2 _startPosition;
-	public Vector2 _endPosition;
-	public Vector2 _colliderOffset;
 
 	protected GameObject _level;
-	protected AudioSource _audioSource;
 
 	protected Dictionary <Vector2, GameObject> _collidebleTiles;
 
@@ -20,7 +17,6 @@ public class MisLevelGenerator : MonoBehaviour {
 	protected virtual void Awake () {
 
 		_collidebleTiles = new Dictionary <Vector2, GameObject> ();
-		_audioSource = GetComponent<AudioSource> ();
 	}
 
 	public GameObject GenerateLevel() {
@@ -28,16 +24,16 @@ public class MisLevelGenerator : MonoBehaviour {
 		_level = new GameObject();
 		_level.name = "Level";
 
-		GenerateLevel (_startPosition.x, _endPosition.x, _startPosition.y, (float)MisConstants.TILE_SIZE/MisConstants.PIXEL_UNIT);
+		GenerateLevel (_startPosition.x, _startPosition.y, (float)MisConstants.TILE_SIZE/MisConstants.PIXEL_UNIT);
 
 		return _level;
 	}
 
-	protected virtual void GenerateLevel (float startPosX, float endPosX, float startPosY, float tileSize) {
+	protected virtual void GenerateLevel (float startPosX, float startPosY, float tileSize) {
 
 	}
 
-	public GameObject BuildTile(Vector2 position, Transform parent, GameObject platform, Vector2 colliderOffset, bool playSFX = false) {
+	public GameObject BuildTile(Vector2 position, Transform parent, GameObject tileObject, bool playSFX = false) {
 
 		GameObject tile = null;
 
@@ -47,27 +43,26 @@ public class MisLevelGenerator : MonoBehaviour {
 
 		if (!_collidebleTiles.ContainsKey (dictKey)) {
 
-			tile = (GameObject) Instantiate (platform);
+			tile = (GameObject) Instantiate (tileObject);
 		} 
 		else if(_collidebleTiles.ContainsKey (dictKey) && _collidebleTiles[dictKey].gameObject == null) {
 
-			tile = (GameObject) Instantiate (platform);
+			tile = (GameObject) Instantiate (tileObject);
 		}
 		else {
 			
 			tile = _collidebleTiles [dictKey];
 		}
 
-		tile.name = "Platform";
-		tile.tag  = MisConstants.TAG_WALL;
-		tile.isStatic = true;
+		tile.name = tileObject.name;
 		tile.transform.parent = parent;
-		tile.transform.position = position;	
+
+		Vector3 finalPos = tileObject.transform.position;
+		finalPos.x = position.x;
+		finalPos.y = position.y;
+		tile.transform.position = finalPos;	
 
 		_collidebleTiles [dictKey] = tile;
-
-		if (playSFX)
-			PlaySFX (LEVEL_SFX.PLAT_CREATE);
 
 		return tile;
 	}
@@ -85,10 +80,5 @@ public class MisLevelGenerator : MonoBehaviour {
 		}
 
 		return false;
-	}
-
-	public void PlaySFX(LEVEL_SFX clip) {
-
-		_audioSource.PlayOneShot (_soundEffects [(int)clip]);
 	}
 }

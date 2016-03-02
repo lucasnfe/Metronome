@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.SceneManagement;
 
+[RequireComponent (typeof (Camera))]
 public class MisSceneManager : MisSingleton<MisSceneManager> {
 
 	public delegate void ActionBetweenScenes();
@@ -34,22 +35,31 @@ public class MisSceneManager : MisSingleton<MisSceneManager> {
 
 		_lastScene = SceneManager.GetActiveScene ().buildIndex;
 
-		if(showLoadingScreen) 
-			SceneManager.LoadScene("LoadingScene");
+		GameObject _loadingBanner = null;
+		if (showLoadingScreen)
+			SceneManager.LoadScene ("LoadingScene");
 
 		yield return new WaitForSeconds(0.1f);
 
 		if (actioneBetweenScenes != null)
 			actioneBetweenScenes();
 
-		SceneManager.LoadScene(sceneName);
+		if (showLoadingScreen) {
+			_loadingBanner = Camera.main.gameObject;
+			DontDestroyOnLoad (_loadingBanner);
+		}
 
-		_currentScene = SceneManager.GetActiveScene ().buildIndex;
+		SceneManager.LoadScene(sceneName);
 
 		yield return new WaitForSeconds(0.1f);
 
+		_currentScene = SceneManager.GetActiveScene ().buildIndex;
+
 		if (actioneAfterLoading != null)
 			actioneAfterLoading();
+
+		if (_loadingBanner)
+			Destroy (_loadingBanner);
 
 		if (sceneName.EndsWith("Menu")) {
 			if(!MisAudioController.Instance.IsPlayingMusic(_backgroundMusic))

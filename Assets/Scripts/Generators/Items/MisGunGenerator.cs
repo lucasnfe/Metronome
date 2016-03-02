@@ -3,7 +3,7 @@ using System.Collections;
 
 public static class MisGunGenerator {
 
-	public static MisGun GenerateGun() {
+	public static MisGun GenerateGun(GameObject owner) {
 
 		// Set a random frequency
 		float frequency = Random.Range(1f, 2f);
@@ -28,7 +28,7 @@ public static class MisGunGenerator {
 		// Apply all SetPixel calls
 		texture.Apply();
 
-		MisGun gun = new MisGun (damage, speed, frequency, texture);
+		MisGun gun = new MisGun (damage, speed, frequency, texture, owner);
 
 		return gun;
 	}

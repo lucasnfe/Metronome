@@ -3,10 +3,11 @@ using System.Collections;
 
 public class MisGun {
 
-	public int       damage     { get; set; }
-	public float     speed      { get; set; }
-	public float     frequency  { get; set; }
-	public Texture2D texture    { get; set; }
+	public int        damage     { get; set; }
+	public float      speed      { get; set; }
+	public float      frequency  { get; set; }
+	public Texture2D  texture    { get; set; }
+	public GameObject owner      { get; set; }
 
 	private MisObjectPool _bullets;
 	private GameObject _bulletTemplate;
@@ -26,12 +27,13 @@ public class MisGun {
 		bullet.gameObject.AddComponent<BoxCollider2D> ();
 	}
 
-	public MisGun(int damage, float speed, float frequency, Texture2D texture) {
+	public MisGun(int damage, float speed, float frequency, Texture2D texture, GameObject owner) {
 
 		this.damage    = damage;
 		this.speed     = speed;
 		this.frequency = frequency;
 		this.texture   = texture;
+		this.owner     = owner;
 
 		_bulletTemplate = Resources.Load ("Particles/MisBullet") as GameObject;
 

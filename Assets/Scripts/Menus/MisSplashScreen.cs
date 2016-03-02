@@ -6,6 +6,6 @@ public class MisSplashScreen : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		MisSceneManager.Instance.LoadScene ("MainMenu");
+		MisSceneManager.Instance.LoadScene ("MainMenu", false);
 	}
 }

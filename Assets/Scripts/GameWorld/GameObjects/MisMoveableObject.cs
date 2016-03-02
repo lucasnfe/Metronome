@@ -2,19 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 
-[RequireComponent (typeof (BoxCollider2D))]
-public class MisMoveableObject : MonoBehaviour {
+public class MisMoveableObject : MisDestroyableObject {
 
 	protected Vector2  _velocity;
-	public Vector2 Velocity { get { return _velocity; } }
+	public Vector2 Velocity { 
+		get { return _velocity; } 
+		set { _velocity = value; } 
+	}
 
 	protected Vector2  _acceleration;
 	public Vector2 Acceleration { get { return _acceleration; } }
 
 	protected Vector2  _ray;
-
-	// Components
-	protected BoxCollider2D _boundingBox;
 
 	// States
 	protected bool _isOnGround;
@@ -33,7 +32,9 @@ public class MisMoveableObject : MonoBehaviour {
 	private Dictionary<Vector2, RaycastHit2D> _vertCollisions;
 	private Dictionary<Vector2, RaycastHit2D> _horicollisions;
 
-	protected virtual void Start() {
+	protected override void Start() {
+
+		base.Start ();
 
 		_boundingBox = GetComponent<BoxCollider2D> ();
 
@@ -92,10 +93,9 @@ public class MisMoveableObject : MonoBehaviour {
 		Vector2 offset = _boundingBox.offset;
 		Vector2 entityPosition = _boundingBox.bounds.center;
 
-		if (_detectVerCollision)
-			DetectVerticalCollision (entityPosition, offset, size);
+		DetectVerticalCollision (entityPosition, offset, size);
 
-		if (_detectHorCollision && Mathf.Abs (_velocity.x) > MisConstants.SAFETY_GAP) {
+		if (Mathf.Abs (_velocity.x) > MisConstants.SAFETY_GAP) {
 
 			if (DetectHorizontalCollision (entityPosition, offset, size)) {
 
@@ -127,6 +127,9 @@ public class MisMoveableObject : MonoBehaviour {
 			return false;
 		}	
 
+		if (!_detectHorCollision)
+			return false;
+
 		return true;
 	}
 
@@ -135,8 +138,8 @@ public class MisMoveableObject : MonoBehaviour {
 		float dirX = transform.localScale.x;
 		float yRayOffset = (size.y / 2f - MisConstants.SAFETY_GAP) * (float)i;
 
-		_ray.x = entityPosition.x + (offset.x + size.x / 2f) * dirX;
-		_ray.y = (entityPosition.y + offset.y - size.y / 2f + MisConstants.SAFETY_GAP) + yRayOffset;
+		_ray.x = entityPosition.x + (offset.x + size.x / 2f + MisConstants.PLAYER_SKIN) * dirX;
+		_ray.y = (entityPosition.y + offset.y - size.y / 2f + MisConstants.PLAYER_SKIN) + yRayOffset;
 
 		RaycastHit2D hit = Physics2D.Raycast (_ray, Vector2.right * dirX, Mathf.Abs (_velocity.x));
 //		Debug.DrawRay (_ray, new Vector2 (dirX, 0));
@@ -147,11 +150,13 @@ public class MisMoveableObject : MonoBehaviour {
 
 				float distance = Mathf.Abs (_ray.x - hit.point.x);
 
-				if (distance >= MisConstants.PLAYER_SKIN)
+				if (_detectHorCollision) {
 
-					_velocity.x = (distance - MisConstants.PLAYER_SKIN) * dirX;
-				else
-					_velocity.x = 0f;
+					if (distance >= MisConstants.PLAYER_SKIN)
+						_velocity.x = (distance - MisConstants.PLAYER_SKIN) * dirX;
+					else
+						_velocity.x = 0f;
+				}
 
 				if (!_horicollisions.ContainsKey(hit.transform.position)) {
 
@@ -191,7 +196,7 @@ public class MisMoveableObject : MonoBehaviour {
 					break;
 			}
 		}
-
+			
 		if (_rayHit.collider == null) {
 
 			foreach (RaycastHit2D hit in _vertCollisions.Values)
@@ -200,6 +205,9 @@ public class MisMoveableObject : MonoBehaviour {
 			_vertCollisions.Clear ();
 			return false;
 		}
+
+		if (!_detectVerCollision)
+			return false;
 
 		return true;
 	}
@@ -210,7 +218,7 @@ public class MisMoveableObject : MonoBehaviour {
 		float dirY =  Mathf.Sign(_velocity.y);
 
 		_ray.x = (entityPosition.x + offset.x * -dirX - size.x / 2f) + size.x / 2f * i;
-		_ray.y = entityPosition.y + offset.y + size.y / 2f * dirY;
+		_ray.y = entityPosition.y + offset.y + size.y / 2f * dirY + MisConstants.PLAYER_SKIN * dirY;
 
 		RaycastHit2D hit = Physics2D.Raycast(_ray, Vector2.up * dirY, Mathf.Abs(_velocity.y));
 //		Debug.DrawRay(_ray,  Vector2.up * dirY);
@@ -221,11 +229,13 @@ public class MisMoveableObject : MonoBehaviour {
 
 				float distance = Mathf.Abs (_ray.y - hit.point.y);
 
-				if (distance >= MisConstants.PLAYER_SKIN)
+				if (_detectVerCollision) {
 
-					_velocity.y = distance * dirY + MisConstants.PLAYER_SKIN;
-				else
-					_velocity.y = 0f;
+					if (distance >= MisConstants.PLAYER_SKIN)
+						_velocity.y = (distance - MisConstants.PLAYER_SKIN) * dirY;
+					else
+						_velocity.y = 0f;
+				}
 
 				if (!_vertCollisions.ContainsKey(hit.transform.position)) {
 
