@@ -3,28 +3,35 @@ using System.Collections;
 using UnityEngine.UI;
 
 [RequireComponent (typeof (Text))]
-public class MisTimer : MonoBehaviour {
+public class MisTimer : MisSingleton<MisTimer> {
 
-	public int startTime;
+	public int  startTime;
 
-	private float  _timeRemaining;
-	private Text _timeText;
+	public bool   Pause       { get; set; }
+	public float  DisplayTime { get; set; }
+
+	private Text   _timeText;
 
 	// Use this for initialization
 	void Start () {
 	
-		_timeRemaining = startTime;
+		DisplayTime = startTime;
 
 		_timeText = GetComponent<Text> ();
-		_timeText.text = FormatTime (_timeRemaining);
+		_timeText.text = FormatTime (DisplayTime);
+
+		Pause = true;
 	}
 
 	void FixedUpdate() {
 
-		if (_timeRemaining > 0) {
-			
-			_timeRemaining -= Time.deltaTime * 2f;
-			_timeText.text = FormatTime (_timeRemaining);
+		if (Pause)
+			return;
+
+		if (DisplayTime > 0) {
+
+			DisplayTime -= Time.deltaTime;
+			_timeText.text = FormatTime (DisplayTime);
 		}
 	}
 

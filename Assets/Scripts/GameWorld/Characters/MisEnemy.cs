@@ -3,56 +3,67 @@ using System.Collections;
 
 public class MisEnemy : MisCharacter {
 
+	float _waitTimeAfterHit;
+	float _moveSide = -1f;
+
 	protected override void Update() {
 
 		base.Update ();
 
-		if (_animator.GetCurrentAnimatorStateInfo (0).IsName ("create"))
+		if (_waitTimeAfterHit > 0f) {
+
+			_waitTimeAfterHit -= Time.deltaTime;
 			return;
-
-		if (MisGameWorld.Instance.GameHero) {
-
-			Vector2 heroPos = MisGameWorld.Instance.GameHero.transform.position;
-			Vector2 normalDirection = (heroPos - (Vector2)transform.position).normalized;
-
-			_velocity = (normalDirection * _moveSpeed * Time.deltaTime);
 		}
+
+		ApplyForce(Vector2.right * _moveSide * _moveSpeed * Time.deltaTime);
 	}
 
 	protected override void DidEnterCollision(Collider2D hit, Vector2 normal) {
 
-		if (_animator.GetCurrentAnimatorStateInfo (0).IsName ("create"))
-			return;
+		base.DidEnterCollision (hit, normal);
 
-		base.DidEnterEventCollision (hit, normal);
-		HitTarget (hit, normal);
-	}
+		if (hit.tag == "Player") {
 
-	protected override void DidStayCollision(Collider2D hit, Vector2 normal) {
+			HitTarget (hit, normal);
+		} 
+		else if (hit.tag == "Wall" && (normal == Vector2.right || normal == Vector2.left)  ) {
 
-		if (_animator.GetCurrentAnimatorStateInfo (0).IsName ("create"))
-			return;
-
-		base.DidStayCollision (hit, normal);
-		HitTarget (hit, normal);
+			_moveSide *= -1;
+		}
 	}
 
 	private void HitTarget(Collider2D hit, Vector2 normal) {
 
 		MisCharacter target = hit.transform.GetComponent<MisCharacter> ();
-		if (target != null && target.tag == "Player") {
+		if (target != null) {
 
 			if (target._isIndestructible)
 				return;
 
-			target.DealDamage (1);
+			Velocity = Vector2.zero;
 
-			Vector2 normalDist = ((Vector2)hit.transform.position - (Vector2)transform.position).normalized;
+			if (transform.position.x > hit.transform.position.x) {
+
+				target.ApplyForce (Vector2.right * -30f * Time.deltaTime);
+				ApplyForce (Vector2.right * 30f * Time.deltaTime);
+			} 
+			else {
+
+				target.ApplyForce (Vector2.right * 30f * Time.deltaTime);
+				ApplyForce (Vector2.right * -30f * Time.deltaTime);
+			}
 
 			target.Velocity = Vector2.zero;
-			target.ApplyForce (normalDist * 10f * Time.deltaTime);
+			target.DealDamage (1);
+			target.SetIndestructibleForTime(0.2f);
 
-			target.SetIndestructibleForTime(1f);
+			_waitTimeAfterHit = 1f;
 		}
+	}
+
+	void TurnDirection() {
+
+
 	}
 }

@@ -5,32 +5,34 @@ using System.Collections.Generic;
 public class MisMoveableObject : MisDestroyableObject {
 
 	protected Vector2  _velocity;
-	public Vector2 Velocity { 
-		get { return _velocity; } 
-		set { _velocity = value; } 
-	}
+	public Vector2 Velocity {  get { return  _velocity; } set { _velocity = value; }  }
 
 	protected Vector2  _acceleration;
 	public Vector2 Acceleration { get { return _acceleration; } }
 
-	protected Vector2  _ray;
+	protected bool  _isOnGround;
 
-	// States
-	protected bool _isOnGround;
+	protected Vector2  _ray;
 
 	// Moveable object configurations
 	public int   _raysAmount;
 	public float _mass;
 	public float _moveSpeed;
 	public float _jumpSpeed;
+	public float _gravityScale = 1f;
 	public bool  _applyGravity;
 	public bool  _detectHorCollision;
 	public bool  _detectVerCollision;
 
-	private RaycastHit2D _rayHit;
+	private RaycastHit2D   _rayHit;
+	private RaycastHit2D   _rayMissHit;
+	private RaycastHit2D []_rayHitTrigger;
 
 	private Dictionary<Vector2, RaycastHit2D> _vertCollisions;
-	private Dictionary<Vector2, RaycastHit2D> _horicollisions;
+	private Dictionary<Vector2, RaycastHit2D> _horiCollisions;
+
+	private Dictionary<Vector2, RaycastHit2D> _vertEventCollisions;
+	private Dictionary<Vector2, RaycastHit2D> _horiEventCollisions;
 
 	protected override void Start() {
 
@@ -39,7 +41,10 @@ public class MisMoveableObject : MisDestroyableObject {
 		_boundingBox = GetComponent<BoxCollider2D> ();
 
 		_vertCollisions = new Dictionary<Vector2, RaycastHit2D> ();
-		_horicollisions = new Dictionary<Vector2, RaycastHit2D> ();
+		_horiCollisions = new Dictionary<Vector2, RaycastHit2D> ();
+
+		_vertEventCollisions = new Dictionary<Vector2, RaycastHit2D> ();
+		_horiEventCollisions = new Dictionary<Vector2, RaycastHit2D> ();
 
 		_rayHit = new RaycastHit2D ();
 	}
@@ -61,7 +66,7 @@ public class MisMoveableObject : MisDestroyableObject {
 
 		// Apply gravity acceleration
 		if (_applyGravity)
-			ApplyForce (Vector2.up * Physics2D.gravity.y * Time.fixedDeltaTime);
+			ApplyForce (Physics2D.gravity * _gravityScale * Time.fixedDeltaTime);
 
 		// Update velocity using currently acceleration
 		_velocity += _acceleration;
@@ -93,9 +98,10 @@ public class MisMoveableObject : MisDestroyableObject {
 		Vector2 offset = _boundingBox.offset;
 		Vector2 entityPosition = _boundingBox.bounds.center;
 
-		DetectVerticalCollision (entityPosition, offset, size);
+		if(_detectVerCollision)
+			DetectVerticalCollision (entityPosition, offset, size);
 
-		if (Mathf.Abs (_velocity.x) > MisConstants.SAFETY_GAP) {
+		if (_detectHorCollision) {
 
 			if (DetectHorizontalCollision (entityPosition, offset, size)) {
 
@@ -107,10 +113,14 @@ public class MisMoveableObject : MisDestroyableObject {
 				}
 			}
 		}
+
+		DetectVerticalTriggerCollision(entityPosition, offset, size);
+
+		DetectHorizontalTriggerCollision (entityPosition, offset, size);
 	}
 
 	private bool DetectHorizontalCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
-								
+
 		for (int rayPos = 0; rayPos < _raysAmount; rayPos++) {
 
 			_rayHit = xAxisRaycasts (entityPosition, offset, size, rayPos);
@@ -120,15 +130,11 @@ public class MisMoveableObject : MisDestroyableObject {
 
 		if (_rayHit.collider == null) {
 
-			foreach (RaycastHit2D hit in _horicollisions.Values)
+			foreach (RaycastHit2D hit in _horiCollisions.Values)
 				DidExitCollision (hit.collider, hit.normal);
 
-			_horicollisions.Clear ();
 			return false;
-		}	
-
-		if (!_detectHorCollision)
-			return false;
+		}
 
 		return true;
 	}
@@ -136,44 +142,85 @@ public class MisMoveableObject : MisDestroyableObject {
 	private RaycastHit2D xAxisRaycasts(Vector2 entityPosition, Vector2 offset, Vector2 size, int i) {
 
 		float dirX = transform.localScale.x;
-		float yRayOffset = (size.y / 2f - MisConstants.SAFETY_GAP) * (float)i;
 
 		_ray.x = entityPosition.x + (offset.x + size.x / 2f + MisConstants.PLAYER_SKIN) * dirX;
-		_ray.y = (entityPosition.y + offset.y - size.y / 2f + MisConstants.PLAYER_SKIN) + yRayOffset;
+		_ray.y = (entityPosition.y + offset.y - size.y / 2f + MisConstants.PLAYER_SKIN) + (size.y / 2f) * i;
 
-		RaycastHit2D hit = Physics2D.Raycast (_ray, Vector2.right * dirX, Mathf.Abs (_velocity.x));
-//		Debug.DrawRay (_ray, new Vector2 (dirX, 0));
+		RaycastHit2D[] hits = Physics2D.RaycastAll (_ray, Vector2.right * dirX, Mathf.Abs (_velocity.x));
+		Debug.DrawRay (_ray, new Vector2 (dirX, 0));
 
-		if (hit.collider) {
+		foreach (RaycastHit2D hit in hits) {
 
-			if (!hit.collider.isTrigger) {
-
-				float distance = Mathf.Abs (_ray.x - hit.point.x);
-
-				if (_detectHorCollision) {
-
-					if (distance >= MisConstants.PLAYER_SKIN)
-						_velocity.x = (distance - MisConstants.PLAYER_SKIN) * dirX;
-					else
-						_velocity.x = 0f;
-				}
-
-				if (!_horicollisions.ContainsKey(hit.transform.position)) {
-
-					_horicollisions [hit.transform.position] = hit;
-					DidEnterCollision (hit.collider, hit.normal);
-				} 
-				else
-					DidStayCollision (_horicollisions [hit.transform.position].collider,
-						_horicollisions [hit.transform.position].normal);
-
-				return hit;
+			if (hit.collider == null) {
+				_rayMissHit = hit;
+				continue;
 			}
 
-			DidEnterEventCollision (hit.collider, hit.normal);
+			if (hit.collider.isTrigger)
+				continue;
+
+			float distance = Mathf.Abs (_ray.x - hit.point.x);
+
+			if (distance >= MisConstants.PLAYER_SKIN)
+				_velocity.x = (distance - MisConstants.PLAYER_SKIN) * dirX;
+			else
+				_velocity.x = 0f;
+
+			if (!_horiCollisions.ContainsKey(hit.transform.position)) {
+
+				_horiCollisions [hit.transform.position] = hit;
+				DidEnterCollision (hit.collider, hit.normal);
+			} 
+			else
+				DidStayCollision (_horiCollisions [hit.transform.position].collider,
+					_horiCollisions [hit.transform.position].normal);
+
+			return hit;
 		}
 
-		return hit;
+		return _rayMissHit;
+	}
+
+	private void DetectHorizontalTriggerCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
+
+		for (int rayPos = 0; rayPos < _raysAmount; rayPos++)
+			_rayHitTrigger = xAxisTriggerRaycasts (entityPosition, offset, size, rayPos);
+
+		if (_rayHitTrigger.Length == 0) {
+
+			foreach (RaycastHit2D hit in _horiEventCollisions.Values)
+				DidExitEventCollision (hit.collider, hit.normal);
+
+			_vertEventCollisions.Clear ();
+		}
+	}
+
+	private RaycastHit2D[] xAxisTriggerRaycasts(Vector2 entityPosition, Vector2 offset, Vector2 size, int i) {
+
+		float dirX = transform.localScale.x;
+
+		_ray.x = entityPosition.x + (offset.x + size.x / 2f + MisConstants.PLAYER_SKIN) * dirX;
+		_ray.y = (entityPosition.y + offset.y - size.y / 2f + MisConstants.PLAYER_SKIN) + (size.y / 2f) * (float)i;
+
+		RaycastHit2D[] hits = Physics2D.RaycastAll (_ray, Vector2.right * dirX, Mathf.Abs (_velocity.x));
+		//		Debug.DrawRay (_ray, new Vector2 (dirX, 0));
+
+		foreach (RaycastHit2D hit in hits) {
+
+			if (hit.collider == null)
+				continue;
+
+			if (hit.collider.isTrigger) {
+
+				if (!_horiEventCollisions.ContainsKey (hit.transform.position)) {
+
+					_horiEventCollisions [hit.transform.position] = hit;
+					DidEnterEventCollision (hit.collider, hit.normal);
+				}
+			}
+		}
+
+		return hits;
 	}
 		
 	private bool DetectVerticalCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
@@ -203,11 +250,9 @@ public class MisMoveableObject : MisDestroyableObject {
 				DidExitCollision (hit.collider, hit.normal);
 
 			_vertCollisions.Clear ();
+
 			return false;
 		}
-
-		if (!_detectVerCollision)
-			return false;
 
 		return true;
 	}
@@ -220,42 +265,101 @@ public class MisMoveableObject : MisDestroyableObject {
 		_ray.x = (entityPosition.x + offset.x * -dirX - size.x / 2f) + size.x / 2f * i;
 		_ray.y = entityPosition.y + offset.y + size.y / 2f * dirY + MisConstants.PLAYER_SKIN * dirY;
 
-		RaycastHit2D hit = Physics2D.Raycast(_ray, Vector2.up * dirY, Mathf.Abs(_velocity.y));
+		RaycastHit2D[] hits = Physics2D.RaycastAll(_ray, Vector2.up * dirY, Mathf.Abs(_velocity.y));
 //		Debug.DrawRay(_ray,  Vector2.up * dirY);
+	
+		foreach (RaycastHit2D hit in hits) {
 
-		if (hit.collider) {
-
-			if (!hit.collider.isTrigger) {
-
-				float distance = Mathf.Abs (_ray.y - hit.point.y);
-
-				if (_detectVerCollision) {
-
-					if (distance >= MisConstants.PLAYER_SKIN)
-						_velocity.y = (distance - MisConstants.PLAYER_SKIN) * dirY;
-					else
-						_velocity.y = 0f;
-				}
-
-				if (!_vertCollisions.ContainsKey(hit.transform.position)) {
-
-					_vertCollisions [hit.transform.position] = hit;
-					DidEnterCollision (hit.collider, hit.normal);
-				} 
-				else
-					DidStayCollision (_vertCollisions [hit.transform.position].collider, 
-						_vertCollisions [hit.transform.position].normal);
-
-				return hit;
+			if (hit.collider == null) {
+				_rayMissHit = hit;
+				continue;
 			}
 
-			DidEnterEventCollision (hit.collider, hit.normal);
+			if (hit.collider.isTrigger)
+				continue;
+
+			float distance = Mathf.Abs (_ray.y - hit.point.y);
+
+			if (distance >= MisConstants.PLAYER_SKIN)
+				_velocity.y = (distance - MisConstants.PLAYER_SKIN) * dirY;
+			else
+				_velocity.y = 0f;
+
+			if (!_vertCollisions.ContainsKey(hit.transform.position)) {
+
+				_vertCollisions [hit.transform.position] = hit;
+				DidEnterCollision (hit.collider, hit.normal);
+			} 
+			else
+				DidStayCollision (_vertCollisions [hit.transform.position].collider, 
+					_vertCollisions [hit.transform.position].normal);
+
+			return hit;
 		}
 
-		return hit;
+		return _rayMissHit;
+	}
+
+	private void DetectVerticalTriggerCollision(Vector2 entityPosition, Vector2 offset, Vector2 size) {
+
+		if (transform.localScale.x == 1f) {
+
+			for (int rayPos = _raysAmount - 1; rayPos >= 0; rayPos--) {
+
+				_rayHitTrigger = yAxisTriggerRaycasts (entityPosition, offset, size, rayPos);
+			}
+		} 
+		else {
+
+			for (int rayPos = 0; rayPos < _raysAmount; rayPos++) {
+
+				_rayHitTrigger = yAxisTriggerRaycasts (entityPosition, offset, size, rayPos);
+			}
+		}
+
+		if (_rayHitTrigger.Length == 0) {
+
+			foreach (RaycastHit2D hit in _vertEventCollisions.Values)
+				DidExitEventCollision (hit.collider, hit.normal);
+
+			_vertEventCollisions.Clear ();
+		}
+	}
+
+	private RaycastHit2D[] yAxisTriggerRaycasts(Vector2 entityPosition, Vector2 offset, Vector2 size, int i) {
+
+		float dirX = -transform.localScale.x;
+		float dirY =  Mathf.Sign(_velocity.y);
+
+		_ray.x = (entityPosition.x + offset.x * -dirX - size.x / 2f) + size.x / 2f * i;
+		_ray.y = entityPosition.y + offset.y + size.y / 2f * dirY + MisConstants.PLAYER_SKIN * dirY;
+
+		RaycastHit2D[] hits = Physics2D.RaycastAll(_ray, Vector2.up * dirY, Mathf.Abs(_velocity.y));
+		//		Debug.DrawRay(_ray,  Vector2.up * dirY);
+
+		foreach (RaycastHit2D hit in hits) {
+
+			if (hit.collider == null)
+				continue;
+
+			if (hit.collider.isTrigger) {
+
+				if (!_vertEventCollisions.ContainsKey (hit.transform.position)) {
+
+					_vertEventCollisions [hit.transform.position] = hit;
+					DidEnterEventCollision (hit.collider, hit.normal);
+				}
+			}
+		}
+
+		return hits;
 	}
 		
 	protected virtual void DidEnterEventCollision(Collider2D hit, Vector2 normal) {
+
+	}
+
+	protected virtual void DidExitEventCollision(Collider2D hit, Vector2 normal) {
 
 	}
 

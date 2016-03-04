@@ -7,6 +7,8 @@ public class MisHero : MisCharacter {
 	private float    _jumpTimer;
 	private float    _stepTimer;
 
+	protected bool  _isLocked;
+
 	private MisGun   _gun;
 	private Vector2  _wallCollisionNormal;
 
@@ -28,11 +30,18 @@ public class MisHero : MisCharacter {
 
 		base.Update ();
 
-		if (!_isDead)
+		// If the hero is indestructible, it can not move
+		_isLocked = _isIndestructible;
+		_applyGravity = !_isLocked;
+
+		if (!_isDead && !_isLocked)
 			KeyboardControl ();
 	}
 
 	private void KeyboardControl() {
+
+		if(!_renderer.isVisible)
+			
 
 		_renderer.flipX = IsGliding();
 
@@ -146,10 +155,10 @@ public class MisHero : MisCharacter {
 		
 		base.DidEnterEventCollision (hit, normal);
 
-		if (hit.gameObject.tag == MisConstants.TAG_KILLZONE) {
+		if (hit.gameObject.tag == PLATFORMS.EVENT.ToString()) {
 
-			MisKillZone killZone = hit.transform.gameObject.GetComponent<MisKillZone> ();
-			MisGameWorld.Instance.ResetLevel(killZone.respawnPosition);
+			MisEventPlatform eventPlatform = hit.transform.gameObject.GetComponent<MisEventPlatform> ();
+			eventPlatform.ExecEvent (normal);
 		}
 	}
 
@@ -162,7 +171,7 @@ public class MisHero : MisCharacter {
 
 		if (hit.tag == "Wall") {
 			
-			if (normal == Vector2.right || normal == -Vector2.right) 
+			if (normal == Vector2.right || normal == Vector2.left) 
 				_wallCollisionNormal = normal;
 		}
 	}
@@ -176,7 +185,7 @@ public class MisHero : MisCharacter {
 
 		if (hit.tag == "Wall") {
 
-			if (normal == Vector2.right || normal == -Vector2.right) 
+			if (normal == Vector2.right || normal == Vector2.left) 
 				_wallCollisionNormal = normal;
 		}
 	}

@@ -16,12 +16,6 @@ public class MisBullet : MisMoveableObject {
 			firedGun.DestroyBullet(this);
 	}
 
-	protected override void DidEnterEventCollision(Collider2D hit, Vector2 normal) { 
-
-		base.DidEnterEventCollision (hit, normal);
-		HitTarget (hit);
-	}
-
 	protected override void DidEnterCollision(Collider2D hit, Vector2 normal) {
 
 		base.DidEnterEventCollision (hit, normal);
@@ -36,10 +30,10 @@ public class MisBullet : MisMoveableObject {
 
 	private void HitTarget(Collider2D hit) {
 
-		MisDestroyableObject target = hit.transform.GetComponent<MisDestroyableObject> ();
-
 		if (firedGun.owner == null)
 			return;
+
+		MisDestroyableObject target = hit.transform.GetComponent<MisDestroyableObject> ();
 
 		if (target != null && target.tag != firedGun.owner.tag)
 			target.DealDamage (firedGun.damage);

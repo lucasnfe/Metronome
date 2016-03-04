@@ -4,20 +4,27 @@ using System.Collections.Generic;
 
 public class MisGameWorld : MisSingleton<MisGameWorld> {
 
+	private Vector2 _horizontalConstraints;
+	public  Vector2 WorldHorizontalConstraints { get { return _horizontalConstraints; } }
+
+	private Vector2 _verticalConstraints;
+	public  Vector2 WorldVerticalConstraints { get { return _verticalConstraints; } }
+
 	private MisHero _misHero;
-	public  MisHero GameHero { get { return _misHero; } }
+	public  MisHero WorldHero { get { return _misHero; } }
 
 	private MisCamera _misCamera;
-	public  MisCamera GameCamera { get { return _misCamera; } }
+	public  MisCamera WorldCamera { get { return _misCamera; } }
 
 	private MetronomeLevelGenerator  _misLevelGenerator;
 	public  MetronomeLevelGenerator  GameGenerator { get { return _misLevelGenerator; } }
 
 	private GameObject   _level;
 	private GameObject   _heroPrefab;
-	private GameObject []_enemiesPrefab;
 
 	private Vector2      _nextSpawningPoint;
+
+	public bool IsPaused { get; set; }
 
 	void LoadTransictionScreen() {
 
@@ -33,11 +40,14 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		_level = _misLevelGenerator.GenerateLevel ();
 		_level.transform.parent = transform;
 
+		_horizontalConstraints.x = -0.5f * MisConstants.TILE_SIZE;
+		_horizontalConstraints.y = Mathf.Infinity;
+
+		_verticalConstraints.x = -MisConstants.LEVEL_GROUND_HEIGHT * MisConstants.TILE_SIZE;
+		_verticalConstraints.y = Mathf.Infinity;
+
 		// Loading hero prefab
 		_heroPrefab = Resources.Load("Characters/MisPlayer") as GameObject;
-
-		// Loading enemies prefabs
-		_enemiesPrefab = Resources.LoadAll<GameObject>("Characters/Enemies");
 	}
 
 	public void SetupLevel() {
@@ -49,32 +59,18 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 			return;
 		}
 
-		SpawnHero (_nextSpawningPoint);
+		SpawnHero ();
 	}
 
-	public void ResetLevel(Vector2 heroSpawningPoint) {
+	public void ResetLevel() {
 
 		Destroy(_misHero.gameObject);
-
-		_nextSpawningPoint = heroSpawningPoint;	
 		MisSceneManager.Instance.ReloadScene ();
 	}
 
-	void SpawnHero(Vector2 spawningPoint) {
+	public void SpawnHero() {
 
-		_misHero = SpawnCharacter (_heroPrefab, spawningPoint).GetComponent<MisHero>();
-
-		if (_misCamera) 			
-			_misCamera.Move(_misHero.transform.position);
-	}
-
-	public void SpawnEnemy(int enemyType, Vector2 spawningPoint) {
-
-		GameObject enemyPrefab = _enemiesPrefab[enemyType];
-		BoxCollider2D collider = enemyPrefab.GetComponent<BoxCollider2D> ();
-
-		Vector2 pos = new Vector2 (spawningPoint.x, spawningPoint.y + collider.bounds.size.y);
-		SpawnCharacter (enemyPrefab, pos);
+		_misHero = SpawnCharacter (_heroPrefab, _nextSpawningPoint).GetComponent<MisHero>();
 	}
 
 	GameObject SpawnCharacter(GameObject characterPrefab, Vector2 spawningPoint) {

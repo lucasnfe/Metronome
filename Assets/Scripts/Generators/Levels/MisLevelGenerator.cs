@@ -7,10 +7,10 @@ public class MisLevelGenerator : MonoBehaviour {
 	public GameObject[] _platforms;
 	public GameObject[] _enemies;
 
-	public Vector2 _startPosition;
+	public int        _lenght = 1;
+	public Vector2    _startPos;
 
 	protected GameObject _level;
-
 	protected Dictionary <Vector2, GameObject> _collidebleTiles;
 
 	// Use this for initialization
@@ -24,12 +24,12 @@ public class MisLevelGenerator : MonoBehaviour {
 		_level = new GameObject();
 		_level.name = "Level";
 
-		GenerateLevel (_startPosition.x, _startPosition.y, (float)MisConstants.TILE_SIZE/MisConstants.PIXEL_UNIT);
+		GenerateLevel (_startPos, _lenght);
 
 		return _level;
 	}
 
-	protected virtual void GenerateLevel (float startPosX, float startPosY, float tileSize) {
+	protected virtual void GenerateLevel(Vector2 startPos, int levelLenght) {
 
 	}
 

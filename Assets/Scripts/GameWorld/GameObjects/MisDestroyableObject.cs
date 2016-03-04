@@ -11,6 +11,8 @@ public class MisDestroyableObject : MonoBehaviour {
 	protected SpriteRenderer _renderer;
 	protected BoxCollider2D  _boundingBox;
 
+	protected bool _isDead;
+
 	public int  _life = 1;
 	public bool _isIndestructible;
 
@@ -38,6 +40,8 @@ public class MisDestroyableObject : MonoBehaviour {
 
 		if (_life <= 0) {
 
+			_isDead = true;
+
 			PlaySFX ((int)DESTROY_SFX.DESTROY);
 			Invoke ("SelfDestroy", 0.05f);
 		}
@@ -52,6 +56,7 @@ public class MisDestroyableObject : MonoBehaviour {
 	public void SetIndestructibleForTime(float seconds) {
 
 		_isIndestructible = true;
+
 		Color currentColor = _renderer.color;
 		currentColor.a = 0.5f;
 		_renderer.color = currentColor;

@@ -5,7 +5,8 @@ using System.Collections;
 [RequireComponent (typeof (Camera))]
 public class MisCamera : MonoBehaviour {
 
-	private Vector3       _move;
+	private Vector3 _move;
+
 	private MisHero       _player;
 	private Camera        _camera;
 	private BoxCollider2D _cameraWindow;
@@ -38,7 +39,7 @@ public class MisCamera : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		_player = MisGameWorld.Instance.GameHero;
+		_player = MisGameWorld.Instance.WorldHero;
 
 		if (!_player)
 			return;
@@ -69,7 +70,24 @@ public class MisCamera : MonoBehaviour {
 			if (_cameraWindow.bounds.max.y -_player.transform.position.y >= _cameraWindow.bounds.size.y)
 					_move.y = heroVel.y;
 		}
-			
-		transform.position += _move;
+
+		float vertExtent = _camera.orthographicSize;    
+		float horzExtent = vertExtent * Screen.width / Screen.height;
+
+		Vector3 cameraNextPos = transform.position + _move;
+
+		if (cameraNextPos.x - horzExtent >= MisGameWorld.Instance.WorldHorizontalConstraints.x &&
+		    cameraNextPos.x + horzExtent <= MisGameWorld.Instance.WorldHorizontalConstraints.y) {
+
+			Vector3 nextPos = new Vector3 (cameraNextPos.x, transform.position.y, cameraNextPos.z);
+			transform.position = nextPos;
+		}
+
+		if (cameraNextPos.y - vertExtent >= MisGameWorld.Instance.WorldVerticalConstraints.x &&
+		    cameraNextPos.y + vertExtent <= MisGameWorld.Instance.WorldVerticalConstraints.y) {
+
+			Vector3 nextPos = new Vector3 (transform.position.x, cameraNextPos.y, cameraNextPos.z);
+			transform.position = nextPos;
+		}
 	}
 }
