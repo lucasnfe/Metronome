@@ -10,7 +10,7 @@ public class MisBullet : MisMoveableObject {
 
 	void Update () {
 
-		ApplyForce (Vector2.right * _moveSpeed * _dir * Time.fixedDeltaTime);
+		_velocity.x = _moveSpeed * _dir * Time.deltaTime;
 
 		if (!_renderer.isVisible)
 			firedGun.DestroyBullet(this);
@@ -33,6 +33,11 @@ public class MisBullet : MisMoveableObject {
 		if (firedGun.owner == null)
 			return;
 
+		if (!hit) {
+			firedGun.DestroyBullet (this);
+			return;
+		}
+			
 		MisDestroyableObject target = hit.transform.GetComponent<MisDestroyableObject> ();
 
 		if (target != null && target.tag != firedGun.owner.tag)

@@ -9,7 +9,7 @@ public static class MisGunGenerator {
 		float frequency = Random.Range(1f, 2f);
 
 		// Set a random speed
-		float speed = 20f/frequency;
+		float speed = 60f/frequency;
 
 		// Set a random damage
 		int damage = (int)(10f/frequency);

@@ -1,104 +1,160 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using SynchronizerData;
 
 public class MetronomeLevelGenerator : MisLevelGenerator {
 
-	private float _placementTimer;
+	private float []_spectrum;
 
 	private Vector2    _currentGroundPos;
-	private Vector2    _platformPlacementVelocity;
-	private GameObject _currentPlatform;
+	private Vector2    _currentPlarfoPos;
 
+	private BeatCounter      _beatCounter;
 	private BeatObserver     _beatObserver;
 	private BeatSynchronizer _beatSync;
 
+	private PerlinNoise  _noiseGenerator;
+
+	private MisObjectPool _tilesSource;
+	private MisObjectPool _enemiesSource;
+
+	private List<GameObject> _tilesAdded;
+	private List<GameObject> _tilesToDelete;
+
 	public static readonly int FST_SECTION = 8;
 	public static readonly int SND_SECTION = 16;
+	public static readonly int SND_SECTION_HEIGHT = 4;
 	public static readonly int FST_JMP_SIZE = 4;
-	public static readonly int PLAT1_POS = 2;
+	public static readonly int PLAT1_POS = 3;
 	public static readonly int PLAT2_POS = 12;
+	public static readonly float GROUND_PLACEMENT_TIME = 6.5f;
 
 	private bool _addedGap;
 
-	protected override void Awake() {
+	protected override void Start() {
 
-		base.Awake ();
-
-		_beatObserver = GetComponent<BeatObserver>();
+		base.Start ();
 
 		_beatSync = GetComponent<BeatSynchronizer>();
+		_beatCounter = GetComponent<BeatCounter>();
+		_beatObserver = GetComponent<BeatObserver>();
+
 		_beatSync.enabled = false;
 
-		_platformPlacementVelocity = new Vector2 (0f, -10f);
-	}
+		_tilesSource  = new MisObjectPool (_platforms[(int)PLATFORMS.BREAKABLE], 300, transform);
+		_tilesSource.ExecActionInObjects (InitTile);
 
-	void FixedUpdate() {
+		_enemiesSource  = new MisObjectPool (_enemies[(int)ENEMIES.BAT], 50, transform);
+		_enemiesSource.ExecActionInObjects (InitEnemy);
 
-		if ((int)(_currentGroundPos.x / MisConstants.TILE_SIZE) < _lenght) {
-			
-			if (_beatSync.enabled) {
+		_tilesAdded    = new List<GameObject> ();
+		_tilesToDelete = new List<GameObject> ();
 
-				_placementTimer += Time.fixedDeltaTime * 6.1f;
-				if (_placementTimer >= 1f) {
+		_noiseGenerator = new PerlinNoise (0);
 
-					PlaceGround ();
-					_placementTimer = 0f;
-				}
-			}
-		}
+		_lenght = (int)(_beatCounter.audioSource.clip.length * 8f);
+		_lenght += FST_SECTION + SND_SECTION + FST_JMP_SIZE;
+
+		_spectrum = new float[64];
 	}
 
 	void Update() {
 
 		if ((_beatObserver.beatMask & BeatType.DownBeat) == BeatType.DownBeat) {
 
-			if ((int)(_currentGroundPos.x / MisConstants.TILE_SIZE) < _lenght)
+			if ((int)(_currentGroundPos.x / MisConstants.TILE_SIZE) < _lenght) {
+
 				AddPlatform ();
+				PlaceGround ();
+			}
 		}
 
 		if ((_beatObserver.beatMask & BeatType.UpBeat) == BeatType.UpBeat) {
 
-				AddEnemy ();
-		}				
+			if ((int)(_currentGroundPos.x / MisConstants.TILE_SIZE) < _lenght) {
+
+				AddEnemy (_currentPlarfoPos);
+				AddEnemy (_currentGroundPos);
+			}
+		}	
+
+		MisHero hero = MisGameWorld.Instance.WorldHero;
+
+		if(hero) {
+
+			float cameraWidth = MisGameWorld.Instance.WorldCamera.GetCameraWidth ();
+
+			foreach (GameObject platform in _tilesAdded) {
+
+				if (_currentGroundPos.x > platform.transform.position.x && 
+					_currentGroundPos.x - platform.transform.position.x > cameraWidth) {
+
+					_tilesSource.SetFreeObject (platform);
+					_tilesToDelete.Add (platform);
+				}
+			}
+				
+			foreach (GameObject platform in _tilesToDelete)
+				_tilesAdded.Remove (platform);
+
+			_tilesToDelete.Clear ();
+		}
 	}
 		
 	protected override void GenerateLevel(Vector2 startPos, int levelLenght) {
 
-		_currentGroundPos = startPos;
+		_currentGroundPos = startPos + Vector2.up * MisConstants.LEVEL_GROUND_HEIGHT * MisConstants.TILE_SIZE;
 
 		for (int i = 0; i < FST_SECTION; i++) {
 
-			GameObject newPlat = BuildTile (_currentGroundPos, _level.transform, _platforms [(int)PLATFORMS.STATIC]);
+			GameObject newPlat = (GameObject)Instantiate (_platforms [(int)PLATFORMS.STATIC], 
+				_currentGroundPos,Quaternion.identity);
+			newPlat.transform.parent = _level.transform;
+
 			FulfillGround (newPlat, MisConstants.LEVEL_GROUND_HEIGHT);
 			_currentGroundPos += Vector2.right *  MisConstants.TILE_SIZE;
 		}
 			
 		_currentGroundPos.x +=  MisConstants.TILE_SIZE * FST_JMP_SIZE;
-		_currentGroundPos.y +=  MisConstants.TILE_SIZE * FST_JMP_SIZE;
+		_currentGroundPos.y +=  MisConstants.TILE_SIZE * SND_SECTION_HEIGHT;
 
 		for (int i = 0; i < SND_SECTION; i++) {
 
 			if (i == PLAT1_POS) {
 
-				GameObject eventPlat = BuildTile (_currentGroundPos + Vector2.up * MisConstants.TILE_SIZE, 
-					_level.transform, _platforms [(int)PLATFORMS.EVENT]);
-				CreateEventPlatform (eventPlat, AddFirstPlatform);
+				GameObject firstPlat1 = (GameObject) Instantiate (_platforms [(int)PLATFORMS.TETRIS1], 
+					_currentGroundPos + Vector2.up * 2f * MisConstants.TILE_SIZE, Quaternion.identity);
+				firstPlat1.transform.parent = _level.transform;
+
+				GameObject firstPlat2 = (GameObject) Instantiate (_platforms [(int)PLATFORMS.TETRIS1], 
+					_currentGroundPos + Vector2.up * 5f * MisConstants.TILE_SIZE, Quaternion.identity);
+				firstPlat2.transform.parent = _level.transform;
+
+				GameObject firstEnemy = (GameObject) Instantiate (_enemies [(int)ENEMIES.BAT], 
+					_currentGroundPos + Vector2.one * 1f * MisConstants.TILE_SIZE, Quaternion.identity);
+				firstEnemy.transform.parent = _level.transform;
 			}
 
 			if (i == PLAT2_POS) {
 
-				GameObject metroPlat = BuildTile (_currentGroundPos + Vector2.up * MisConstants.TILE_SIZE, _level.transform, _platforms [(int)PLATFORMS.EVENT]);
+				GameObject metroPlat = (GameObject) Instantiate (_platforms [(int)PLATFORMS.EVENT],
+					_currentGroundPos + Vector2.up * MisConstants.TILE_SIZE, Quaternion.identity);
+				metroPlat.transform.parent = _level.transform;
+
 				CreateEventPlatform (metroPlat, StartMetronome);
 			}
 
-			GameObject newPlat = BuildTile (_currentGroundPos, _level.transform, _platforms [(int)PLATFORMS.STATIC]);
-			FulfillGround (newPlat, MisConstants.LEVEL_GROUND_HEIGHT + FST_JMP_SIZE);
+			GameObject newPlat = (GameObject) Instantiate (_platforms [(int)PLATFORMS.STATIC],
+				_currentGroundPos, Quaternion.identity);
+			newPlat.transform.parent = _level.transform;
+
+			FulfillGround (newPlat, MisConstants.LEVEL_GROUND_HEIGHT + SND_SECTION_HEIGHT);
 
 			_currentGroundPos += Vector2.right *  MisConstants.TILE_SIZE;
 		}
 
-		_currentGroundPos.y -= MisConstants.TILE_SIZE * FST_JMP_SIZE;
+		_currentGroundPos.y -= MisConstants.TILE_SIZE * (SND_SECTION_HEIGHT + 2f);
 	} 
 
 	// Fullfill area below the surface with background tile
@@ -109,7 +165,9 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 		for(int j = 0; j < height; j++) {
 
 			Vector2 pos = new Vector2 (startPos.x, startPos.y - (j + 1) *  MisConstants.TILE_SIZE);
-			BuildTile (pos, _level.transform, _platforms [(int)PLATFORMS.STATIC]);
+
+			GameObject newPlat = (GameObject) Instantiate (_platforms [(int)PLATFORMS.STATIC],pos,Quaternion.identity);
+			newPlat.transform.parent = _level.transform;
 		}
 	}
 
@@ -123,37 +181,27 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		surface.tag = PLATFORMS.EVENT.ToString();
 	}
-		
-	private void AddFirstPlatform() {
-		
-		Vector2 relativ = GetHeroRelativePos ();
-		Vector2 platPos = relativ + new Vector2(4f, 6f) * MisConstants.TILE_SIZE;
 
-		_currentPlatform = BuildTile (platPos, _level.transform, _platforms [(int)PLATFORMS.TETRIS1]);
-	
-		GameObject enemy = Instantiate (_enemies [(int)ENEMIES.BAT]);
-		enemy.name = _platforms [(int)PLATFORMS.TETRIS1].name;
-		enemy.transform.position = platPos + Vector2.up * 2f * MisConstants.TILE_SIZE;
-		enemy.transform.parent = _level.transform;
-
-	}
-		
 	private void AddPlatform() {
 
-		Vector2 platPos = GetHeroRelativePos () + new Vector2(4f, Random.Range(1, 8)) * MisConstants.TILE_SIZE;
+		_beatCounter.audioSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
 
-		int randomPlat = Random.Range((int)PLATFORMS.TETRIS1, (int)PLATFORMS.TETRIS6 + 1);
-		_currentPlatform = BuildTile (platPos, _level.transform, _platforms [randomPlat]);
+		float x = _spectrum [_spectrum.Length / 2];
+		float noiseTile = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
+		float noisePos  = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
+		float noiseRot  = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
+
+		Vector2 platPos = new Vector2(_currentGroundPos.x, NoiseToTileHeight(noisePos) * MisConstants.TILE_SIZE);
+		BuildTile (NoiseToTile(noiseTile), platPos, Vector3.forward * NoiseToRotation(noiseRot));
+		_currentPlarfoPos = platPos;
 	}
 
-	private void AddEnemy() {
+	private void AddEnemy(Vector3 referencePos) {
 
-		Vector3 platPos = GetHeroRelativePos () + new Vector2(4f, Random.Range(1, 8)) * MisConstants.TILE_SIZE;
+		Vector3 platPos = referencePos + Vector3.up * 2f * MisConstants.TILE_SIZE;
 		platPos.z = _enemies [(int)ENEMIES.BAT].transform.position.z;
 
-		GameObject enemy = Instantiate (_enemies [(int)ENEMIES.BAT]);
-		enemy.name = _enemies [(int)ENEMIES.BAT].name;
-
+		GameObject enemy = _enemiesSource.GetFreeObject();
 		enemy.transform.parent = _level.transform;
 		enemy.transform.position = platPos;
 	}
@@ -161,33 +209,25 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 	private void StartMetronome() {
 
 		_beatSync.enabled = true;
-		_placementTimer = 1f;
 		MisTimer.Instance.Pause = false;
 	}
 
 	private void PlaceGround() {
 
-		if (_addedGap) {
+		_beatCounter.audioSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
 
-			GameObject newPlat = BuildTile (_currentGroundPos, _level.transform, _platforms [(int)PLATFORMS.STATIC]);
-			FulfillGround (newPlat, MisConstants.LEVEL_GROUND_HEIGHT);
-			_currentGroundPos += Vector2.right *  MisConstants.TILE_SIZE;
+		float x = _spectrum [_spectrum.Length / 2];
+		float noisePos = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
 
-			_addedGap = false;
+		int height = NoiseToGroundHeight (noisePos);
 
-			return;
-		}
-
-		if (!_addedGap && Random.value > 0.9f) {
-
-			_addedGap = true;
-			_currentGroundPos += Vector2.right * Random.Range(3, 4) * MisConstants.TILE_SIZE;
-			return;
-		}
+		if (height > 0) {
 			
-		GameObject newPlat1 = BuildTile (_currentGroundPos, _level.transform, _platforms [(int)PLATFORMS.STATIC]);
-		FulfillGround (newPlat1, MisConstants.LEVEL_GROUND_HEIGHT);
-		_currentGroundPos += Vector2.right *  MisConstants.TILE_SIZE;
+			BuildTile ((int)PLATFORMS.TETRIS1, _currentGroundPos, Vector3.zero);
+			_currentGroundPos.y = (height - 2) * MisConstants.TILE_SIZE;
+		}
+
+		_currentGroundPos.x += MisConstants.TILE_SIZE;
 	}
 		
 	private Vector2 GetHeroRelativePos() {
@@ -199,10 +239,110 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		Vector2 heroPos = MisGameWorld.Instance.WorldHero.transform.position;
 
-		float rate = Mathf.Floor(heroPos.x / (_lenght * MisConstants.TILE_SIZE) * 1000f);
-		relativePos.x = rate * MisConstants.TILE_SIZE;
-		relativePos.y = (int)_currentGroundPos.y;
+		float rateX = Mathf.Floor(heroPos.x / (_lenght * MisConstants.TILE_SIZE) * _lenght);
+		relativePos.x = rateX * MisConstants.TILE_SIZE;
+
+		float rateY = Mathf.Floor(heroPos.y / (MisConstants.LEVEL_HEIGHT * MisConstants.TILE_SIZE) * MisConstants.LEVEL_HEIGHT);
+		relativePos.y = rateY * MisConstants.TILE_SIZE;
 
 		return relativePos;
 	}
+
+	public void BuildTile(int tileType, Vector2 position, Vector3 eulerAngles) {
+
+		GameObject plat = _platforms [tileType];
+
+		foreach (Transform tile in plat.transform) {
+
+			GameObject freeTile = _tilesSource.GetFreeObject ();
+			freeTile.transform.position = (Vector3)position + tile.position;
+			freeTile.transform.rotation = tile.rotation;
+
+			freeTile.transform.Rotate (eulerAngles);
+
+			_tilesAdded.Add (freeTile);
+		}
+	}
+
+	void InitTile(GameObject obj) {
+
+		obj.GetComponent<MisDestroyableObject> ().ObjectSource = _tilesSource;
+	}
+
+	void InitEnemy(GameObject obj) {
+
+		obj.GetComponent<MisDestroyableObject> ().ObjectSource = _enemiesSource;
+	}
+
+	int NoiseToTile(float noiseValue) {
+
+		if (noiseValue >= -1f && noiseValue < -0.6f)
+			return (int)PLATFORMS.TETRIS1;
+
+		if (noiseValue >= -0.6f && noiseValue < -0.2f)
+			return (int)PLATFORMS.TETRIS2;
+
+		if (noiseValue >= -0.2f && noiseValue < 0.4f)
+			return (int)PLATFORMS.TETRIS3;
+
+		if (noiseValue >= 0.4f && noiseValue < 0.8f)
+			return (int)PLATFORMS.TETRIS4;
+
+		return (int)PLATFORMS.TETRIS5;
+	}
+
+	int NoiseToTileHeight(float noiseValue) {
+
+		if (noiseValue >= -1f && noiseValue < -0.4f)
+			return MisConstants.LEVEL_GROUND_HEIGHT + 7;
+
+		if (noiseValue >= -0.4f && noiseValue < -0.2f)
+			return MisConstants.LEVEL_GROUND_HEIGHT + 6;
+
+		if (noiseValue >= -0.2f && noiseValue < 0f)
+			return MisConstants.LEVEL_GROUND_HEIGHT + 5;
+
+		if (noiseValue >= 0f && noiseValue < 0.2f)
+			return MisConstants.LEVEL_GROUND_HEIGHT + 4;
+
+		if (noiseValue >= 0.2f && noiseValue < 0.4f)
+			return MisConstants.LEVEL_GROUND_HEIGHT + 3;
+
+		if (noiseValue >= 0.4f && noiseValue < 0.6f)
+			return MisConstants.LEVEL_GROUND_HEIGHT + 2;
+
+		if (noiseValue >= 0.6f && noiseValue < 0.8f)
+			return MisConstants.LEVEL_GROUND_HEIGHT + 1;
+
+		return MisConstants.LEVEL_GROUND_HEIGHT;
+	}
+
+	int NoiseToGroundHeight(float noiseValue) {
+
+		if (noiseValue >= -2f && noiseValue < 0f)
+			return MisConstants.LEVEL_GROUND_HEIGHT;
+
+		if (noiseValue >= 0f && noiseValue < 0.25f)
+			return MisConstants.LEVEL_GROUND_HEIGHT - 1;
+
+		if (noiseValue >= 0.25f && noiseValue < 0.5f)
+			return MisConstants.LEVEL_GROUND_HEIGHT - 2;
+
+		return MisConstants.LEVEL_GROUND_HEIGHT - 3;
+	}
+
+	float NoiseToRotation(float noiseValue) {
+
+		if (noiseValue >= -2f && noiseValue < 0f)
+			return 0f;
+
+		if (noiseValue >= 0f && noiseValue < 0.25f)
+			return 90f;
+
+		if (noiseValue >= 0.25f && noiseValue < 0.5f)
+			return 180f;
+
+		return 270f;
+	}
+
 }

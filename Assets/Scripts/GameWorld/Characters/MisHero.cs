@@ -40,9 +40,6 @@ public class MisHero : MisCharacter {
 
 	private void KeyboardControl() {
 
-		if(!_renderer.isVisible)
-			
-
 		_renderer.flipX = IsGliding();
 
 		VerticalMovement();
@@ -141,7 +138,7 @@ public class MisHero : MisCharacter {
 			dir = _wallCollisionNormal.x;
 
 		Vector3 shootPos = transform.position;
-		shootPos.x += (_boundingBox.size.x * 0.5f + 0.05f) * dir;
+		shootPos.x += (_boundingBox.size.x * 0.5f + MisConstants.PLAYER_SKIN * 100f) * dir;
 
 		PlaySFX ((int)CHARACTER_SFX.SHOOT);
 

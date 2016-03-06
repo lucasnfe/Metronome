@@ -6,6 +6,8 @@ using System.Collections;
 [RequireComponent (typeof (BoxCollider2D))]
 public class MisDestroyableObject : MonoBehaviour {
 
+	public MisObjectPool ObjectSource { get; set; }
+
 	protected Animator       _animator;
 	protected AudioSource    _audioSource;
 	protected SpriteRenderer _renderer;
@@ -41,9 +43,7 @@ public class MisDestroyableObject : MonoBehaviour {
 		if (_life <= 0) {
 
 			_isDead = true;
-
-			PlaySFX ((int)DESTROY_SFX.DESTROY);
-			Invoke ("SelfDestroy", 0.05f);
+			KillCharacter ();
 		}
 	}
 
@@ -81,9 +81,19 @@ public class MisDestroyableObject : MonoBehaviour {
 
 		_boundingBox.enabled = true;
 	}
+
+	protected void KillCharacter() {
+
+		PlaySFX ((int)DESTROY_SFX.DESTROY);
+		Invoke ("SelfDestroy", 0.05f);
+	}
 		
 	void SelfDestroy() {
 
-		Destroy (gameObject);
+		if (ObjectSource != null)
+			
+			ObjectSource.SetFreeObject (this.gameObject);
+		else
+			Destroy (gameObject);
 	}
 }

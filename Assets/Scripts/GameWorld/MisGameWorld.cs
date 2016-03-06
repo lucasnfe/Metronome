@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class MisGameWorld : MisSingleton<MisGameWorld> {
 
-	private Vector2 _horizontalConstraints;
+	private Vector2 _horizontalConstraints;	
 	public  Vector2 WorldHorizontalConstraints { get { return _horizontalConstraints; } }
 
 	private Vector2 _verticalConstraints;
@@ -19,12 +19,20 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 	private MetronomeLevelGenerator  _misLevelGenerator;
 	public  MetronomeLevelGenerator  GameGenerator { get { return _misLevelGenerator; } }
 
+	private bool _isWorldSet;
+
+	private Vector3 _nextSpawningPoint;
+
 	private GameObject   _level;
 	private GameObject   _heroPrefab;
 
-	private Vector2      _nextSpawningPoint;
-
 	public bool IsPaused { get; set; }
+
+	void Update() {
+
+		if (_isWorldSet && !_misHero)
+			ResetLevel ();
+	}
 
 	void LoadTransictionScreen() {
 
@@ -43,8 +51,10 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		_horizontalConstraints.x = -0.5f * MisConstants.TILE_SIZE;
 		_horizontalConstraints.y = Mathf.Infinity;
 
-		_verticalConstraints.x = -MisConstants.LEVEL_GROUND_HEIGHT * MisConstants.TILE_SIZE;
-		_verticalConstraints.y = Mathf.Infinity;
+		_verticalConstraints.x = 0f;
+		_verticalConstraints.y = (MisConstants.LEVEL_HEIGHT) * MisConstants.TILE_SIZE;
+
+		_nextSpawningPoint = new Vector2(1f, MisConstants.LEVEL_GROUND_HEIGHT + 1f) * MisConstants.TILE_SIZE;
 
 		// Loading hero prefab
 		_heroPrefab = Resources.Load("Characters/MisPlayer") as GameObject;
@@ -58,14 +68,26 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 			Debug.LogError ("You need to create a camera.");
 			return;
 		}
-
+			
 		SpawnHero ();
+
+		_isWorldSet = true;
 	}
 
 	public void ResetLevel() {
 
-		Destroy(_misHero.gameObject);
-		MisSceneManager.Instance.ReloadScene ();
+		_isWorldSet = false;
+
+		if (_level)
+			Destroy (_level);
+
+		if (_misLevelGenerator)
+			Destroy (_misLevelGenerator.gameObject);
+		
+		if(_misHero)
+			Destroy(_misHero.gameObject);
+		
+		MisSceneManager.Instance.ReloadScene (true, LoadPlayableLevel, SetupLevel);
 	}
 
 	public void SpawnHero() {

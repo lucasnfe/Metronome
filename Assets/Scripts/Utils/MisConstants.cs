@@ -15,8 +15,7 @@ public enum PLATFORMS {
 	TETRIS2,
 	TETRIS3,
 	TETRIS4,
-	TETRIS5,
-	TETRIS6,
+	TETRIS5
 }
 
 public enum CHARACTER_SFX {
@@ -46,7 +45,8 @@ public class MisConstants {
 	public static readonly float   TILE_SIZE      	  = (64f - 1f)/PIXEL_UNIT;
 
 	// LEVEL GENERATOR CONSTANTS
-	public static readonly int   LEVEL_GROUND_HEIGHT  = 5;
+	public static readonly int   LEVEL_GROUND_HEIGHT  = 3;
+	public static readonly int   LEVEL_HEIGHT  = 12;
 
 	// EVENT PLATFORM TAGS
 	public static readonly string TAG_WALL 		      = "Wall";

@@ -71,23 +71,59 @@ public class MisCamera : MonoBehaviour {
 					_move.y = heroVel.y;
 		}
 
-		float vertExtent = _camera.orthographicSize;    
-		float horzExtent = vertExtent * Screen.width / Screen.height;
+		// Lock camera to defined bounds
+		float horzExtent = GetCameraWidth ()/2f;
+		float vertExtent = GetCameraHeight()/2f;
 
 		Vector3 cameraNextPos = transform.position + _move;
 
-		if (cameraNextPos.x - horzExtent >= MisGameWorld.Instance.WorldHorizontalConstraints.x &&
-		    cameraNextPos.x + horzExtent <= MisGameWorld.Instance.WorldHorizontalConstraints.y) {
+		if (cameraNextPos.x > transform.position.x) {
 
-			Vector3 nextPos = new Vector3 (cameraNextPos.x, transform.position.y, cameraNextPos.z);
-			transform.position = nextPos;
+			if (cameraNextPos.x + horzExtent <= MisGameWorld.Instance.WorldHorizontalConstraints.y) {
+				
+				Vector3 nextPos = new Vector3 (cameraNextPos.x, transform.position.y, transform.position.z);
+				transform.position = nextPos;
+			}
+		}
+		else if(cameraNextPos.x < transform.position.x) {
+
+			if (cameraNextPos.x - horzExtent >= MisGameWorld.Instance.WorldHorizontalConstraints.x) {
+
+				Vector3 nextPos = new Vector3 (cameraNextPos.x, transform.position.y, transform.position.z);
+			    transform.position = nextPos;
+			}
 		}
 
-		if (cameraNextPos.y - vertExtent >= MisGameWorld.Instance.WorldVerticalConstraints.x &&
-		    cameraNextPos.y + vertExtent <= MisGameWorld.Instance.WorldVerticalConstraints.y) {
+		if (cameraNextPos.y > transform.position.y) {
 
-			Vector3 nextPos = new Vector3 (transform.position.x, cameraNextPos.y, cameraNextPos.z);
-			transform.position = nextPos;
+			if (cameraNextPos.y + vertExtent <= MisGameWorld.Instance.WorldVerticalConstraints.y) {
+
+				Vector3 nextPos = new Vector3 (transform.position.x, cameraNextPos.y, transform.position.z);
+				transform.position = nextPos;
+			}
+
+		} else if (cameraNextPos.y < transform.position.y) {
+
+			if (cameraNextPos.y - vertExtent >= MisGameWorld.Instance.WorldVerticalConstraints.x) {
+
+				Vector3 nextPos = new Vector3 (transform.position.x, cameraNextPos.y, transform.position.z);
+				transform.position = nextPos;
+			}
 		}
+	}
+
+	public float GetCameraWidth() {
+
+		return _camera.aspect * 2f * _camera.orthographicSize;
+	}
+
+	public float GetCameraHeight() {
+
+		return 2f * _camera.orthographicSize;
+	}
+
+	public Vector2 GetCameraSize() {
+
+		return new Vector2 (GetCameraWidth(), GetCameraHeight());
 	}
 }

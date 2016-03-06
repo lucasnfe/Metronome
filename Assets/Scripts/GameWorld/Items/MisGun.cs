@@ -37,7 +37,7 @@ public class MisGun {
 
 		_bulletTemplate = Resources.Load ("Particles/MisBullet") as GameObject;
 
-		_bullets = new MisObjectPool(_bulletTemplate, InitBullet);
+		_bullets = new MisObjectPool(_bulletTemplate, 50, null, InitBullet);
 	}
 
 	public MisBullet Fire(Vector3 startPos, float dir) {

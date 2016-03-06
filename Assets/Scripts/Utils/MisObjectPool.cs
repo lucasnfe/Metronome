@@ -4,18 +4,24 @@ using System.Collections.Generic;
 
 public class MisObjectPool {
 
+	public int _polledAmount;
 	private List<GameObject> _pool;
-	public int _polledAmount = 10;
 
 	public delegate void InitObject(GameObject obj);
 
 	// Use this for initialization
-	public MisObjectPool (GameObject objTemplate, InitObject initMethod = null) {
+	public MisObjectPool (GameObject objTemplate, int poolSize = 50, Transform poolParent = null, InitObject initMethod = null) {
 
 		_pool = new List<GameObject> ();
 
+		if(_polledAmount == 0)
+			_polledAmount = poolSize;
+
 		GameObject poolObj = new GameObject();
 		poolObj.name = objTemplate.name + "Pool";
+
+		if (poolParent)
+			poolObj.transform.parent = poolParent;
 
 		for(int i = 0; i < _polledAmount; i++) {
 
@@ -28,6 +34,12 @@ public class MisObjectPool {
 
 			_pool.Add (obj);
 		}
+	}
+
+	public void ExecActionInObjects(InitObject action) {
+
+		for(int i = 0; i < _polledAmount; i++)
+			action (_pool [i]);
 	}
 
 	public GameObject GetFreeObject() {

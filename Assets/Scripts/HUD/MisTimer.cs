@@ -7,8 +7,8 @@ public class MisTimer : MisSingleton<MisTimer> {
 
 	public int  startTime;
 
-	public bool   Pause       { get; set; }
-	public float  DisplayTime { get; set; }
+	public bool  Pause       { get; set; }
+	public float DisplayTime { get; set; }
 
 	private Text   _timeText;
 

@@ -16,7 +16,13 @@ public class MisCharacter : MisMoveableObject {
 		constrainedPos.x = Mathf.Clamp (constrainedPos.x, MisGameWorld.Instance.WorldHorizontalConstraints.x, 
 			MisGameWorld.Instance.WorldHorizontalConstraints.y);
 
+		constrainedPos.y = Mathf.Clamp (constrainedPos.y, -Mathf.Infinity,  
+			MisGameWorld.Instance.WorldVerticalConstraints.y);
+
 		transform.position = constrainedPos;
+
+		if (transform.position.y < MisGameWorld.Instance.WorldVerticalConstraints.x)
+			KillCharacter ();
 
 //		UpdateState();
 	}
