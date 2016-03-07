@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.UI;
 
 [RequireComponent (typeof (Text))]
-public class MisTimer : MisSingleton<MisTimer> {
+public class MisTimer : MonoBehaviour {
 
 	public int  startTime;
 

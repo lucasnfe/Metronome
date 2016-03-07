@@ -3,13 +3,7 @@ using System.Collections;
 
 public class MisHUD : MisSingleton<MisHUD> {
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+	public MisHealthBar  heroHealthBar;
+	public MisHealthBar  bossHealthBar;
+	public MisTimer      timer;
 }

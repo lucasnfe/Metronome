@@ -21,8 +21,8 @@ public class MisCharacter : MisMoveableObject {
 
 		transform.position = constrainedPos;
 
-		if (transform.position.y < MisGameWorld.Instance.WorldVerticalConstraints.x)
-			KillCharacter ();
+		if (transform.position.y < MisGameWorld.Instance.WorldVerticalConstraints.x - 1f * MisConstants.TILE_SIZE)
+			KillCharacter (false);
 
 //		UpdateState();
 	}

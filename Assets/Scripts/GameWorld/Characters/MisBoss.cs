@@ -20,4 +20,10 @@ public class MisBoss : MisEnemy {
 		pos.y = Mathf.Lerp(pos.y, FollowingPoint.y + 1f * MisConstants.TILE_SIZE, _jumpSpeed * Time.deltaTime);
 		transform.position = pos;
 	}
+
+	public override void DealDamage(int damage) {
+
+		base.DealDamage (damage);
+		MisHUD.Instance.bossHealthBar.SetHealthBar((float)_currentLife / (float)_life);
+	}
 }

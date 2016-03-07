@@ -13,7 +13,8 @@ public class MisDestroyableObject : MonoBehaviour {
 	protected SpriteRenderer _renderer;
 	protected BoxCollider2D  _boundingBox;
 
-	protected bool _isDead;
+	protected bool  _isDead;
+	protected float _currentLife;
 
 	public int  _life = 1;
 	public bool _isIndestructible;
@@ -28,22 +29,23 @@ public class MisDestroyableObject : MonoBehaviour {
 		_boundingBox = GetComponent<BoxCollider2D>();
 
 		_isIndestructible = false;
+		_currentLife = _life;
 	}
 
-	public void DealDamage(int damage) {
+	public virtual void DealDamage(int damage) {
 
 		if (_isIndestructible)
 			return;
 
-		_life -= damage;
+		_currentLife -= damage;
 		PlaySFX ((int)DESTROY_SFX.HIT);
 
 		_animator.SetTrigger ("hit");
 
-		if (_life <= 0) {
+		if (_currentLife <= 0) {
 
 			_isDead = true;
-			KillCharacter ();
+			KillCharacter (true);
 		}
 	}
 
@@ -82,9 +84,11 @@ public class MisDestroyableObject : MonoBehaviour {
 		_boundingBox.enabled = true;
 	}
 
-	protected void KillCharacter() {
+	protected void KillCharacter(bool playSound) {
 
-		PlaySFX ((int)DESTROY_SFX.DESTROY);
+		if(playSound)
+			PlaySFX ((int)DESTROY_SFX.DESTROY);
+
 		Invoke ("SelfDestroy", 0.05f);
 	}
 		

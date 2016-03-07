@@ -206,6 +206,12 @@ public class MisHero : MisCharacter {
 		}
 	}
 
+	public override void DealDamage(int damage) {
+
+		base.DealDamage (damage);
+		MisHUD.Instance.heroHealthBar.SetHealthBar((float)_currentLife / (float)_life);
+	}
+
 	protected bool IsGliding() {
 
 		bool isPressingRun = Input.GetKey (KeyCode.RightArrow) || Input.GetKey (KeyCode.LeftArrow);

@@ -9,7 +9,6 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 	private Vector2    _currentGroundPos;
 	private Vector2    _currentPlarfoPos;
-	private Vector2    _bossNextPos;
 
 	private BeatCounter      _beatCounter;
 	private BeatObserver     _beatObserver;
@@ -64,7 +63,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 	void Update() {
 		
 		_boss.FollowingPoint.x = _currentGroundPos.x;
-		_boss.FollowingPoint.y = _bossNextPos.y;
+		_boss.FollowingPoint.y = _currentPlarfoPos.y + 1f * MisConstants.TILE_SIZE;
 
 		if ((_beatObserver.beatMask & BeatType.DownBeat) == BeatType.DownBeat) {
 
@@ -72,17 +71,6 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 				AddPlatform ();
 				PlaceGround ();
-
-				_beatCounter.audioSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
-
-				float x = _spectrum [_spectrum.Length / 2];
-				float noiseValue = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
-
-				if (noiseValue >= -2f && noiseValue < 0f)
-					
-					_bossNextPos = _currentPlarfoPos;
-				else
-					_bossNextPos = _currentGroundPos;
 			}
 		}
 
@@ -234,7 +222,9 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		_beatSync.gameObject.SetActive(true);
 		_boss.gameObject.SetActive(true);
-		MisTimer.Instance.Pause = false;
+		MisHUD.Instance.bossHealthBar.gameObject.SetActive (true);
+
+		MisHUD.Instance.timer.Pause = false;
 	}
 
 	private void PlaceGround() {
