@@ -3,7 +3,8 @@ using System.Collections;
 
 public enum ENEMIES {
 
-	BAT
+	MINION,
+	BOSS
 }
 
 public enum PLATFORMS {

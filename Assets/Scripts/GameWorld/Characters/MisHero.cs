@@ -171,6 +171,10 @@ public class MisHero : MisCharacter {
 			if (normal == Vector2.right || normal == Vector2.left) 
 				_wallCollisionNormal = normal;
 		}
+		else if (hit.tag == "Enemy") {
+
+			hit.gameObject.GetComponent<MisEnemy>().HitTarget (_boundingBox, normal);
+		} 
 	}
 
 	protected override void DidStayCollision(Collider2D hit, Vector2 normal) {

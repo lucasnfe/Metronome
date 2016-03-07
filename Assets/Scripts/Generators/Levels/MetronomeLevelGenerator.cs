@@ -9,6 +9,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 	private Vector2    _currentGroundPos;
 	private Vector2    _currentPlarfoPos;
+	private Vector2    _bossNextPos;
 
 	private BeatCounter      _beatCounter;
 	private BeatObserver     _beatObserver;
@@ -22,15 +23,15 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 	private List<GameObject> _tilesAdded;
 	private List<GameObject> _tilesToDelete;
 
+	private MisBoss _boss;
+
 	public static readonly int FST_SECTION = 8;
 	public static readonly int SND_SECTION = 16;
 	public static readonly int SND_SECTION_HEIGHT = 4;
 	public static readonly int FST_JMP_SIZE = 4;
 	public static readonly int PLAT1_POS = 3;
 	public static readonly int PLAT2_POS = 12;
-	public static readonly float GROUND_PLACEMENT_TIME = 6.5f;
-
-	private bool _addedGap;
+	public static readonly int SONG_SAMPLE_SIZE = 64;
 
 	protected override void Start() {
 
@@ -40,12 +41,13 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 		_beatCounter = GetComponent<BeatCounter>();
 		_beatObserver = GetComponent<BeatObserver>();
 
-		_beatSync.enabled = false;
+		_beatSync.gameObject.SetActive(false);
+		_boss.gameObject.SetActive(false);
 
 		_tilesSource  = new MisObjectPool (_platforms[(int)PLATFORMS.BREAKABLE], 300, transform);
 		_tilesSource.ExecActionInObjects (InitTile);
 
-		_enemiesSource  = new MisObjectPool (_enemies[(int)ENEMIES.BAT], 50, transform);
+		_enemiesSource  = new MisObjectPool (_enemies[(int)ENEMIES.MINION], 50, transform);
 		_enemiesSource.ExecActionInObjects (InitEnemy);
 
 		_tilesAdded    = new List<GameObject> ();
@@ -56,10 +58,13 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 		_lenght = (int)(_beatCounter.audioSource.clip.length * 8f);
 		_lenght += FST_SECTION + SND_SECTION + FST_JMP_SIZE;
 
-		_spectrum = new float[64];
+		_spectrum = new float[SONG_SAMPLE_SIZE];
 	}
 
 	void Update() {
+		
+		_boss.FollowingPoint.x = _currentGroundPos.x;
+		_boss.FollowingPoint.y = _bossNextPos.y;
 
 		if ((_beatObserver.beatMask & BeatType.DownBeat) == BeatType.DownBeat) {
 
@@ -67,6 +72,17 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 				AddPlatform ();
 				PlaceGround ();
+
+				_beatCounter.audioSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
+
+				float x = _spectrum [_spectrum.Length / 2];
+				float noiseValue = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
+
+				if (noiseValue >= -2f && noiseValue < 0f)
+					
+					_bossNextPos = _currentPlarfoPos;
+				else
+					_bossNextPos = _currentGroundPos;
 			}
 		}
 
@@ -131,7 +147,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 					_currentGroundPos + Vector2.up * 5f * MisConstants.TILE_SIZE, Quaternion.identity);
 				firstPlat2.transform.parent = _level.transform;
 
-				GameObject firstEnemy = (GameObject) Instantiate (_enemies [(int)ENEMIES.BAT], 
+				GameObject firstEnemy = (GameObject) Instantiate (_enemies [(int)ENEMIES.MINION], 
 					_currentGroundPos + Vector2.one * 1f * MisConstants.TILE_SIZE, Quaternion.identity);
 				firstEnemy.transform.parent = _level.transform;
 			}
@@ -153,6 +169,14 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 			_currentGroundPos += Vector2.right *  MisConstants.TILE_SIZE;
 		}
+
+		// Spawn the boss
+		Vector3 bossPos = _currentGroundPos;
+		bossPos.z = _enemies [(int)ENEMIES.BOSS].transform.position.z;
+
+		GameObject objBoss = (GameObject)Instantiate (_enemies[(int)ENEMIES.BOSS], bossPos, Quaternion.identity);
+		objBoss.transform.parent = _level.transform;
+		_boss = objBoss.GetComponent<MisBoss> ();
 
 		_currentGroundPos.y -= MisConstants.TILE_SIZE * (SND_SECTION_HEIGHT + 2f);
 	} 
@@ -199,7 +223,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 	private void AddEnemy(Vector3 referencePos) {
 
 		Vector3 platPos = referencePos + Vector3.up * 2f * MisConstants.TILE_SIZE;
-		platPos.z = _enemies [(int)ENEMIES.BAT].transform.position.z;
+		platPos.z = _enemies [(int)ENEMIES.MINION].transform.position.z;
 
 		GameObject enemy = _enemiesSource.GetFreeObject();
 		enemy.transform.parent = _level.transform;
@@ -208,7 +232,8 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 	private void StartMetronome() {
 
-		_beatSync.enabled = true;
+		_beatSync.gameObject.SetActive(true);
+		_boss.gameObject.SetActive(true);
 		MisTimer.Instance.Pause = false;
 	}
 
