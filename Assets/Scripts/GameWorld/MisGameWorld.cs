@@ -32,6 +32,12 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 		if (_isWorldSet && !_misHero)
 			ResetLevel ();
+
+		if (_isWorldSet && !_misLevelGenerator.Boss)
+			_misLevelGenerator.StopMetronome ();
+
+		if (_isWorldSet && MisHUD.Instance.timer.DisplayTime <= 0f)
+			_misLevelGenerator.DestroyMetronome ();
 	}
 
 	void LoadTransictionScreen() {
@@ -52,7 +58,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		_horizontalConstraints.y = Mathf.Infinity;
 
 		_verticalConstraints.x = 0f;
-		_verticalConstraints.y = (MisConstants.LEVEL_HEIGHT) * MisConstants.TILE_SIZE;
+		_verticalConstraints.y = (MisConstants.LEVEL_HEIGHT + 1f) * MisConstants.TILE_SIZE;
 
 		_nextSpawningPoint = new Vector2(1f, MisConstants.LEVEL_GROUND_HEIGHT + 1f) * MisConstants.TILE_SIZE;
 
@@ -68,7 +74,8 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 			Debug.LogError ("You need to create a camera.");
 			return;
 		}
-			
+
+		MisHUD.Instance.timer.SetTimer((int)_misLevelGenerator._lenght/8);
 		SpawnHero ();
 
 		_isWorldSet = true;

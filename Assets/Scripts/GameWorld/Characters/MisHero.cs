@@ -34,7 +34,7 @@ public class MisHero : MisCharacter {
 		_isLocked = _isIndestructible;
 		_applyGravity = !_isLocked;
 
-		if (!_isDead && !_isLocked)
+		if (!_isDead)
 			KeyboardControl ();
 	}
 
@@ -42,9 +42,11 @@ public class MisHero : MisCharacter {
 
 		_renderer.flipX = IsGliding();
 
-		VerticalMovement();
-			
-		HorizontalMovement();
+		if(!_isLocked)
+			VerticalMovement();
+
+		if(!_isLocked)
+			HorizontalMovement();
 
 		AttackingBehaviour();
 	}

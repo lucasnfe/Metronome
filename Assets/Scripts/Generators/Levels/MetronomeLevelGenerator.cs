@@ -21,8 +21,10 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 	private List<GameObject> _tilesAdded;
 	private List<GameObject> _tilesToDelete;
+	protected Dictionary <Vector2, GameObject> _collidebleTiles;
 
 	private MisBoss _boss;
+	public MisBoss Boss { get { return _boss; } }
 
 	public static readonly int FST_SECTION = 8;
 	public static readonly int SND_SECTION = 16;
@@ -40,7 +42,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 		_beatCounter = GetComponent<BeatCounter>();
 		_beatObserver = GetComponent<BeatObserver>();
 
-		_beatSync.gameObject.SetActive(false);
+		_beatSync.enabled = false;
 		_boss.gameObject.SetActive(false);
 
 		_tilesSource  = new MisObjectPool (_platforms[(int)PLATFORMS.BREAKABLE], 300, transform);
@@ -51,6 +53,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		_tilesAdded    = new List<GameObject> ();
 		_tilesToDelete = new List<GameObject> ();
+		_collidebleTiles = new Dictionary <Vector2, GameObject> ();
 
 		_noiseGenerator = new PerlinNoise (0);
 
@@ -79,7 +82,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 			if ((int)(_currentGroundPos.x / MisConstants.TILE_SIZE) < _lenght) {
 
 				AddEnemy (_currentPlarfoPos);
-				AddEnemy (_currentGroundPos);
+				AddEnemy (_currentGroundPos - Vector2.right * MisConstants.TILE_SIZE);
 			}
 		}	
 
@@ -218,13 +221,29 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 		enemy.transform.position = platPos;
 	}
 
-	private void StartMetronome() {
+	public void StartMetronome() {
 
-		_beatSync.gameObject.SetActive(true);
+		_beatSync.enabled = true;
 		_boss.gameObject.SetActive(true);
 		MisHUD.Instance.bossHealthBar.gameObject.SetActive (true);
 
 		MisHUD.Instance.timer.Pause = false;
+	}
+
+	public void StopMetronome() {
+
+		_beatSync.enabled = false;
+		_beatCounter.audioSource.Stop ();
+		MisHUD.Instance.bossHealthBar.gameObject.SetActive (false);
+		MisHUD.Instance.timer.Pause = true;
+	}
+
+	public void DestroyMetronome() {
+
+		_beatSync.gameObject.SetActive (false);
+
+		MisHUD.Instance.bossHealthBar.gameObject.SetActive (false);
+		MisHUD.Instance.timer.Pause = true;
 	}
 
 	private void PlaceGround() {
@@ -269,13 +288,29 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		foreach (Transform tile in plat.transform) {
 
-			GameObject freeTile = _tilesSource.GetFreeObject ();
-			freeTile.transform.position = (Vector3)position + tile.position;
-			freeTile.transform.rotation = tile.rotation;
+			Vector3 tilePos = (Vector3)position + tile.position;
 
-			freeTile.transform.Rotate (eulerAngles);
+			float xKey = float.Parse(tilePos.x.ToString("0.00"));
+			float yKey = float.Parse(tilePos.y.ToString("0.00"));
+			Vector2 dictKey = new Vector2 (xKey, yKey);  
 
-			_tilesAdded.Add (freeTile);
+			if (_collidebleTiles.ContainsKey (dictKey) &&
+			    _collidebleTiles [dictKey].gameObject == null) {
+
+				_collidebleTiles.Remove (dictKey);
+			}
+
+			if (!_collidebleTiles.ContainsKey (dictKey)) {
+
+				GameObject freeTile = _tilesSource.GetFreeObject ();
+				freeTile.transform.position = tilePos;
+				freeTile.transform.rotation = tile.rotation;
+
+				freeTile.transform.Rotate (eulerAngles);
+
+				_collidebleTiles [dictKey] = freeTile;
+				_tilesAdded.Add (freeTile);
+			}
 		}
 	}
 
@@ -359,5 +394,4 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		return 270f;
 	}
-
 }

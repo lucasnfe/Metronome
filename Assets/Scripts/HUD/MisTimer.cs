@@ -5,20 +5,19 @@ using UnityEngine.UI;
 [RequireComponent (typeof (Text))]
 public class MisTimer : MonoBehaviour {
 
-	public int  startTime;
+	public int     _startTime;
+	private float _displayTime;
 
-	public bool  Pause       { get; set; }
-	public float DisplayTime { get; set; }
+	public float  DisplayTime  { get { return _displayTime; } }
+	public bool   Pause        { get; set; }
 
 	private Text   _timeText;
 
 	// Use this for initialization
 	void Start () {
-	
-		DisplayTime = startTime;
 
 		_timeText = GetComponent<Text> ();
-		_timeText.text = FormatTime (DisplayTime);
+		SetTimer (_startTime);
 
 		Pause = true;
 	}
@@ -28,12 +27,13 @@ public class MisTimer : MonoBehaviour {
 		if (Pause)
 			return;
 
-		if (DisplayTime > 0) {
+		if (_displayTime > 0) {
 
-			DisplayTime -= Time.deltaTime;
-			_timeText.text = FormatTime (DisplayTime);
+			_displayTime -= Time.fixedDeltaTime * 1.6f;
+			_timeText.text = FormatTime (_displayTime);
 		}
 	}
+
 
 	string FormatTime(float time) {
 
@@ -41,5 +41,11 @@ public class MisTimer : MonoBehaviour {
 		int seconds = (int)time % 60;
 
 		return string.Format ("{0:00}:{1:00}", minutes, seconds);
+	}
+
+	public void SetTimer(int time) {
+
+		_displayTime = time;
+		_timeText.text = FormatTime (_displayTime);
 	}
 }
