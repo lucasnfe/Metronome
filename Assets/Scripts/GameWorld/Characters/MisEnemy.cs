@@ -3,8 +3,6 @@ using System.Collections;
 
 public class MisEnemy : MisCharacter {
 
-	private float _separationForceX = 30f;
-	private float _separationForceY = 2f;
 	protected float _waitTimeAfterHit;
 
 	protected override void DidEnterCollision(Collider2D hit, Vector2 normal) {

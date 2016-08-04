@@ -24,14 +24,14 @@ public class MisCharacter : MisMoveableObject {
 		if (transform.position.y < MisGameWorld.Instance.WorldVerticalConstraints.x - 1f * MisConstants.TILE_SIZE)
 			KillCharacter (false);
 
-//		UpdateState();
+		UpdateState();
 	}
 
-	private void UpdateState() {
+	protected virtual void UpdateState() {
 
 		if (_animator) {
 
-			_animator.SetBool ("isRunning", IsRunning () && !_isAttacking);
+			_animator.SetBool ("isRunning", IsRunning () && _isOnGround && !_isAttacking);
 			_animator.SetBool ("isJumping", (IsJumping () || IsFalling ()) && !_isAttacking);
 			_animator.SetBool ("isShooting", _isAttacking);
 		}

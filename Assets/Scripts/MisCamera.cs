@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿	using UnityEngine;
 using System.Collections;
 
 [RequireComponent (typeof (BoxCollider2D))]
@@ -22,7 +22,7 @@ public class MisCamera : MonoBehaviour {
 		_camera.gameObject.layer = LayerMask.NameToLayer ("Ignore Raycast");
 
 		float originalSize = _camera.orthographicSize;
-		_camera.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
+//		_camera.orthographicSize = Screen.height / (MisConstants.PIXEL_UNIT * 2);
 
 		Vector2 adaptedSize = Vector2.zero;
 		adaptedSize.x = (_camera.orthographicSize * _cameraWindow.size.x) / originalSize;

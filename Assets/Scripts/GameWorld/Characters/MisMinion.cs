@@ -15,7 +15,8 @@ public class MisMinion : MisEnemy {
 			return;
 		}
 
-		ApplyForce(Vector2.right * _moveSide * _moveSpeed * Time.deltaTime);
+		if(_isOnGround)
+			ApplyForce(Vector2.right * _moveSide * _moveSpeed * Time.deltaTime);
 	}
 
 	protected override void DidEnterCollision(Collider2D hit, Vector2 normal) {

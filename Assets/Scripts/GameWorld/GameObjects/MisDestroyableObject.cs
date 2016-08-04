@@ -94,9 +94,11 @@ public class MisDestroyableObject : MonoBehaviour {
 		
 	void SelfDestroy() {
 
-		if (ObjectSource != null)
-			
+		if (ObjectSource != null) {
+		
+			_currentLife = _life;
 			ObjectSource.SetFreeObject (this.gameObject);
+		}
 		else
 			Destroy (gameObject);
 	}

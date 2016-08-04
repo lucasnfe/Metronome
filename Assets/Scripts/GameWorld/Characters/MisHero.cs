@@ -38,6 +38,13 @@ public class MisHero : MisCharacter {
 			KeyboardControl ();
 	}
 
+	protected override void UpdateState() {
+
+		base.UpdateState ();
+
+		_animator.SetBool ("isGliding", IsGliding());
+	}
+
 	private void KeyboardControl() {
 
 		_renderer.flipX = IsGliding();
@@ -57,7 +64,7 @@ public class MisHero : MisCharacter {
 		if (_wallCollisionNormal != Vector2.zero)
 			canJump = true;
 
-		if (canJump && Input.GetKeyDown(KeyCode.UpArrow)){
+		if (canJump && Input.GetKeyDown(KeyCode.Z)){
 
 			_jumpTimer = _longJumpTime;
 
@@ -73,14 +80,14 @@ public class MisHero : MisCharacter {
 		}
 
 		if (_jumpTimer > 0f) {
-			
-			if (Input.GetKeyUp(KeyCode.UpArrow)) {
+
+			if (Input.GetKeyUp(KeyCode.Z)) {
 
 				_jumpTimer = 0f;
 
-			} 
-			else if(Input.GetKey(KeyCode.UpArrow)) {
-				
+			}
+			else if(Input.GetKey(KeyCode.Z)) {
+
 				ApplyForce (Vector2.up * _jumpSpeed * _jumpTimer * Time.fixedDeltaTime);
 
 				_jumpTimer -= Time.fixedDeltaTime;
@@ -106,7 +113,7 @@ public class MisHero : MisCharacter {
 					PlaySFX ((int)CHARACTER_SFX.RUN);
 					_stepTimer = 0f;
 				}
-			} 
+			}
 			else
 				_stepTimer = _stepDelay;
 		}
@@ -116,7 +123,7 @@ public class MisHero : MisCharacter {
 
 		_isAttacking = false;
 
-		if (Input.GetKeyDown (KeyCode.Space)) {
+		if (Input.GetKeyDown (KeyCode.X)) {
 
 			if (_shootDelay >= _gun.frequency) {
 
@@ -128,7 +135,7 @@ public class MisHero : MisCharacter {
 			_shootDelay += Time.deltaTime;
 		}
 
-		if (Input.GetKeyUp (KeyCode.Space))
+		if (Input.GetKeyUp (KeyCode.X))
 			_shootDelay = _gun.frequency;
 	}
 
@@ -140,7 +147,7 @@ public class MisHero : MisCharacter {
 			dir = _wallCollisionNormal.x;
 
 		Vector3 shootPos = transform.position;
-		shootPos.x += (_boundingBox.size.x * 0.5f + MisConstants.PLAYER_SKIN * 100f) * dir;
+		shootPos.x += (_boundingBox.size.x * 0.5f + MisConstants.PLAYER_SKIN * 150f) * dir;
 
 		PlaySFX ((int)CHARACTER_SFX.SHOOT);
 
@@ -151,7 +158,7 @@ public class MisHero : MisCharacter {
 
 		if (hit == null)
 			return;
-		
+
 		base.DidEnterEventCollision (hit, normal);
 
 		if (hit.gameObject.tag == PLATFORMS.EVENT.ToString()) {
@@ -165,18 +172,18 @@ public class MisHero : MisCharacter {
 
 		if (hit == null)
 			return;
-		
+
 		base.DidEnterCollision (hit, normal);
 
 		if (hit.tag == "Wall") {
-			
-			if (normal == Vector2.right || normal == Vector2.left) 
+
+			if (normal == Vector2.right || normal == Vector2.left)
 				_wallCollisionNormal = normal;
 		}
 		else if (hit.tag == "Enemy") {
 
 			hit.gameObject.GetComponent<MisEnemy>().HitTarget (_boundingBox, normal);
-		} 
+		}
 	}
 
 	protected override void DidStayCollision(Collider2D hit, Vector2 normal) {
@@ -188,13 +195,13 @@ public class MisHero : MisCharacter {
 
 		if (hit.tag == "Wall") {
 
-			if (normal == Vector2.right || normal == Vector2.left) 
+			if (normal == Vector2.right || normal == Vector2.left)
 				_wallCollisionNormal = normal;
 		}
 	}
 
 	protected override void DidExitCollision(Collider2D hit, Vector2 normal) {
-	
+
 		if (hit == null) {
 			_wallCollisionNormal = Vector2.zero;
 			return;

@@ -48,7 +48,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 
 	public void LoadPlayableLevel() {
 				
-		_misLevelGenerator = Instantiate (Resources.Load<MetronomeLevelGenerator> ("Generators/MisLevelGenerator"));
+		_misLevelGenerator = Instantiate (Resources.Load<MetronomeLevelGenerator> ("Prefabs/Generators/MisLevelGenerator"));
 		DontDestroyOnLoad (_misLevelGenerator);
 
 		_level = _misLevelGenerator.GenerateLevel ();
@@ -63,7 +63,7 @@ public class MisGameWorld : MisSingleton<MisGameWorld> {
 		_nextSpawningPoint = new Vector2(1f, MisConstants.LEVEL_GROUND_HEIGHT + 1f) * MisConstants.TILE_SIZE;
 
 		// Loading hero prefab
-		_heroPrefab = Resources.Load("Characters/MisPlayer") as GameObject;
+		_heroPrefab = Resources.Load("Prefabs/Characters/MisPlayer") as GameObject;
 	}
 
 	public void SetupLevel() {

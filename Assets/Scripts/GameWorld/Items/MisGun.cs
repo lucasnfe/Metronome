@@ -20,11 +20,13 @@ public class MisGun {
 		bullet.firedGun = this;
 		bullet.gameObject.layer = LayerMask.NameToLayer ("Ignore Raycast");
 
-		SpriteRenderer bulletSprite = obj.GetComponent<SpriteRenderer> ();
-		Rect rect = new Rect (Vector2.zero, new Vector2 (texture.width, texture.height));
-		bulletSprite.sprite = Sprite.Create(texture, rect, Vector2.zero);
+//		SpriteRenderer bulletSprite = obj.GetComponent<SpriteRenderer> ();
+//		if (bulletSprite.sprite == null) {
+//			Rect rect = new Rect (Vector2.zero, new Vector2 (texture.width, texture.height));
+//			bulletSprite.sprite = Sprite.Create (texture, rect, Vector2.zero);
+//		}
 
-		bullet.gameObject.AddComponent<BoxCollider2D> ();
+//		bullet.gameObject.AddComponent<BoxCollider2D> ();
 	}
 
 	public MisGun(int damage, float speed, float frequency, Texture2D texture, GameObject owner) {
@@ -35,8 +37,9 @@ public class MisGun {
 		this.texture   = texture;
 		this.owner     = owner;
 
-		_bulletTemplate = Resources.Load ("Particles/MisBullet") as GameObject;
+		_bulletTemplate = Resources.Load ("Prefabs/Particles/MisBullet") as GameObject;
 
+		this.speed = _bulletTemplate.GetComponent<MisBullet>()._moveSpeed;
 		_bullets = new MisObjectPool(_bulletTemplate, 50, null, InitBullet);
 	}
 

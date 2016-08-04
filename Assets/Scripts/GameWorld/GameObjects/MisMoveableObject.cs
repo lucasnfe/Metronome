@@ -390,7 +390,10 @@ public class MisMoveableObject : MisDestroyableObject {
 		if (dir != 0f) {
 				
 			Vector3 temp = transform.localScale;
-			temp.x = Mathf.Sign (dir);
+
+			if(Mathf.Sign (dir) != temp.x)
+				temp.x = -temp.x;
+			
 			transform.localScale = temp;
 		}
 	}
@@ -412,6 +415,6 @@ public class MisMoveableObject : MisDestroyableObject {
 
 	public bool IsRunning() {
 
-		return _velocity.x != 0f;
+		return Mathf.Abs(_velocity.x) >= 0.005f;
 	}
 }

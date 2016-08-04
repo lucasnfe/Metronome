@@ -7,6 +7,9 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 	private float []_spectrum;
 
+	private int _lastAddedPlatform;
+	private float _lastAnglePlatform;
+
 	private Vector2    _currentGroundPos;
 	private Vector2    _currentPlarfoPos;
 
@@ -32,7 +35,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 	public static readonly int FST_JMP_SIZE = 4;
 	public static readonly int PLAT1_POS = 3;
 	public static readonly int PLAT2_POS = 12;
-	public static readonly int SONG_SAMPLE_SIZE = 64;
+	public static readonly int SONG_SAMPLE_SIZE = 256;
 
 	protected override void Start() {
 
@@ -66,7 +69,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 	void Update() {
 		
 		_boss.FollowingPoint.x = _currentGroundPos.x;
-		_boss.FollowingPoint.y = _currentPlarfoPos.y + 1f * MisConstants.TILE_SIZE;
+		_boss.FollowingPoint.y = _currentPlarfoPos.y;
 
 		if ((_beatObserver.beatMask & BeatType.DownBeat) == BeatType.DownBeat) {
 
@@ -82,7 +85,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 			if ((int)(_currentGroundPos.x / MisConstants.TILE_SIZE) < _lenght) {
 
 				AddEnemy (_currentPlarfoPos);
-				AddEnemy (_currentGroundPos - Vector2.right * MisConstants.TILE_SIZE);
+//				AddEnemy (_currentGroundPos);
 			}
 		}	
 
@@ -108,6 +111,18 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 			_tilesToDelete.Clear ();
 		}
 	}
+
+	private int[,] AddSpawnPointsToPlatform(int type, float rotInDegrees) {
+
+		int[,] platformDescriptor = MisConstants.PLATFORM_DESCRIPTOR[(int)type];
+
+		int timesToRotate = (int)rotInDegrees / 90;
+
+		for (int i = 0; i < timesToRotate; i++)
+			platformDescriptor = MisMath.Rotate2DArrayClockwise (platformDescriptor);
+
+		return platformDescriptor;
+	}
 		
 	protected override void GenerateLevel(Vector2 startPos, int levelLenght) {
 
@@ -115,7 +130,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		for (int i = 0; i < FST_SECTION; i++) {
 
-			GameObject newPlat = (GameObject)Instantiate (_platforms [(int)PLATFORMS.STATIC], 
+			GameObject newPlat = (GameObject)Instantiate (_platforms [(int)PLATFORMS.STATIC1], 
 				_currentGroundPos,Quaternion.identity);
 			newPlat.transform.parent = _level.transform;
 
@@ -123,19 +138,19 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 			_currentGroundPos += Vector2.right *  MisConstants.TILE_SIZE;
 		}
 			
-		_currentGroundPos.x +=  MisConstants.TILE_SIZE * FST_JMP_SIZE;
-		_currentGroundPos.y +=  MisConstants.TILE_SIZE * SND_SECTION_HEIGHT;
+		_currentGroundPos.x += MisConstants.TILE_SIZE * FST_JMP_SIZE;
+		_currentGroundPos.y += MisConstants.TILE_SIZE * SND_SECTION_HEIGHT;
 
 		for (int i = 0; i < SND_SECTION; i++) {
 
 			if (i == PLAT1_POS) {
 
 				GameObject firstPlat1 = (GameObject) Instantiate (_platforms [(int)PLATFORMS.TETRIS1], 
-					_currentGroundPos + Vector2.up * 2f * MisConstants.TILE_SIZE, Quaternion.identity);
+					_currentGroundPos + Vector2.up * 1f * MisConstants.TILE_SIZE, Quaternion.identity);
 				firstPlat1.transform.parent = _level.transform;
 
 				GameObject firstPlat2 = (GameObject) Instantiate (_platforms [(int)PLATFORMS.TETRIS1], 
-					_currentGroundPos + Vector2.up * 5f * MisConstants.TILE_SIZE, Quaternion.identity);
+					_currentGroundPos + Vector2.up * 4f * MisConstants.TILE_SIZE, Quaternion.identity);
 				firstPlat2.transform.parent = _level.transform;
 
 				GameObject firstEnemy = (GameObject) Instantiate (_enemies [(int)ENEMIES.MINION], 
@@ -152,7 +167,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 				CreateEventPlatform (metroPlat, StartMetronome);
 			}
 
-			GameObject newPlat = (GameObject) Instantiate (_platforms [(int)PLATFORMS.STATIC],
+			GameObject newPlat = (GameObject) Instantiate (_platforms [(int)PLATFORMS.STATIC1],
 				_currentGroundPos, Quaternion.identity);
 			newPlat.transform.parent = _level.transform;
 
@@ -181,7 +196,7 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 			Vector2 pos = new Vector2 (startPos.x, startPos.y - (j + 1) *  MisConstants.TILE_SIZE);
 
-			GameObject newPlat = (GameObject) Instantiate (_platforms [(int)PLATFORMS.STATIC],pos,Quaternion.identity);
+			GameObject newPlat = (GameObject) Instantiate (_platforms [(int)PLATFORMS.STATIC2],pos,Quaternion.identity);
 			newPlat.transform.parent = _level.transform;
 		}
 	}
@@ -196,29 +211,64 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		surface.tag = PLATFORMS.EVENT.ToString();
 	}
-
+		
 	private void AddPlatform() {
 
 		_beatCounter.audioSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
 
-		float x = _spectrum [_spectrum.Length / 2];
-		float noiseTile = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
-		float noisePos  = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
-		float noiseRot  = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
+		float x =  MisMath.Mean(_spectrum) * 20f;
+		float noiseTile = _noiseGenerator.FractalNoise1D (x, 5, _lenght * 0.00001f, 1.8f);
+		float noisePos  = _noiseGenerator.FractalNoise1D (x, 5, _lenght * 0.00001f, 1.8f);
+		float noiseRot  = _noiseGenerator.FractalNoise1D (x, 5, _lenght * 0.00001f, 1.8f);
 
 		Vector2 platPos = new Vector2(_currentGroundPos.x, NoiseToTileHeight(noisePos) * MisConstants.TILE_SIZE);
-		BuildTile (NoiseToTile(noiseTile), platPos, Vector3.forward * NoiseToRotation(noiseRot));
+
+		int tileType = NoiseToTile (noiseTile);
+		float tileRot = NoiseToRotation (noiseRot);
+		BuildTile (tileType, platPos, Vector3.forward * tileRot);
+
+		_lastAddedPlatform = tileType;
+		_lastAnglePlatform = tileRot;
 		_currentPlarfoPos = platPos;
 	}
 
 	private void AddEnemy(Vector3 referencePos) {
 
-		Vector3 platPos = referencePos + Vector3.up * 2f * MisConstants.TILE_SIZE;
+		int[,] spawnPoints = MisConstants.PLATFORM_DESCRIPTOR [_lastAddedPlatform];
+
+		int xPos = 0;
+		int yPos = 0;
+
+		for (int i = 0; i < spawnPoints.GetLength (0); i++) {
+
+			for (int j = 0; j < spawnPoints.GetLength (1); j++) {
+
+				if (spawnPoints [i, j] == 1) {
+
+					if (j + 1 < spawnPoints.GetLength (1) && spawnPoints [i, j + 1] == 0) {
+
+						xPos = i;
+						yPos = j + 1;
+						break;
+					} 
+					else if (j + 1 >= spawnPoints.GetLength (1)) {
+
+						xPos = i;
+						yPos = j + 1;
+						break;
+					}
+				}
+			}
+		}
+
+		Vector3 platPos = referencePos + new Vector3(xPos - 0f, yPos) * MisConstants.TILE_SIZE;
 		platPos.z = _enemies [(int)ENEMIES.MINION].transform.position.z;
 
 		GameObject enemy = _enemiesSource.GetFreeObject();
 		enemy.transform.parent = _level.transform;
 		enemy.transform.position = platPos;
+
+		enemy.GetComponent<MisEnemy> ().Velocity = Vector2.zero;
 	}
 
 	public void StartMetronome() {
@@ -250,8 +300,8 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 		_beatCounter.audioSource.GetSpectrumData(_spectrum, 0, FFTWindow.BlackmanHarris);
 
-		float x = _spectrum [_spectrum.Length / 2];
-		float noisePos = _noiseGenerator.FractalNoise1D (x, 10, _lenght * 0.0000001f, 2f);
+		float x =  MisMath.Mean(_spectrum) * 20f;
+		float noisePos = _noiseGenerator.FractalNoise1D (x, 5, _lenght * 0.00001f, 1.8f);
 
 		int height = NoiseToGroundHeight (noisePos);
 
@@ -304,9 +354,11 @@ public class MetronomeLevelGenerator : MisLevelGenerator {
 
 				GameObject freeTile = _tilesSource.GetFreeObject ();
 				freeTile.transform.position = tilePos;
-				freeTile.transform.rotation = tile.rotation;
 
-				freeTile.transform.Rotate (eulerAngles);
+//				if (tileType != (int)PLATFORMS.TETRIS4) {
+//					freeTile.transform.rotation = tile.rotation;
+//					freeTile.transform.Rotate (eulerAngles);
+//				}
 
 				_collidebleTiles [dictKey] = freeTile;
 				_tilesAdded.Add (freeTile);

@@ -29,7 +29,7 @@ public class MisTimer : MonoBehaviour {
 
 		if (_displayTime > 0) {
 
-			_displayTime -= Time.fixedDeltaTime * 1.6f;
+			_displayTime -= Time.fixedDeltaTime * 1.66f;
 			_timeText.text = FormatTime (_displayTime);
 		}
 	}

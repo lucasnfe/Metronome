@@ -16,8 +16,8 @@ public class MisBoss : MisEnemy {
 	protected override void Update () {
 
 		Vector3 pos = transform.position;
-		pos.x = Mathf.Lerp(pos.x, FollowingPoint.x + 3f * MisConstants.TILE_SIZE, _moveSpeed * Time.deltaTime);
-		pos.y = Mathf.Lerp(pos.y, FollowingPoint.y + 1f * MisConstants.TILE_SIZE, _jumpSpeed * Time.deltaTime);
+		pos.x = Mathf.Lerp(pos.x, FollowingPoint.x + 2f * MisConstants.TILE_SIZE, _moveSpeed * Time.deltaTime);
+		pos.y = Mathf.Lerp(pos.y, FollowingPoint.y + 4f * MisConstants.TILE_SIZE, _jumpSpeed * Time.deltaTime);
 		transform.position = pos;
 	}
 
